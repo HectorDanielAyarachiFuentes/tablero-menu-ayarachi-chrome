@@ -1,0 +1,486 @@
+/* ============================================
+   SISTEMA DE WIDGETS PRO (CLEAN & MINIMAL)
+   Estilo Tipo: Notion / Linear / Productivity Tools
+   ============================================ */
+
+/* Botón flotante */
+#widgets-toggle-btn {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 44px;
+    height: 44px;
+    background: rgba(15, 15, 20, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10000;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+#widgets-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+#widgets-toggle-btn.active {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Sidebar */
+.widgets-sidebar {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 380px;
+    height: 100vh;
+    background: rgba(8, 8, 12, 0.92);
+    /* Casi sólido para legibilidad profesional */
+    backdrop-filter: blur(40px) saturate(100%);
+    -webkit-backdrop-filter: blur(40px) saturate(100%);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 9999;
+    padding: 40px 30px;
+    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
+}
+
+.widgets-sidebar.open {
+    right: 0;
+}
+
+.widgets-sidebar::-webkit-scrollbar {
+    width: 0;
+}
+
+/* Header */
+.widgets-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.widgets-header h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+/* Widget Card - Minimalista */
+.widget-card {
+    background: transparent;
+    /* Sin fondo para look integrado */
+    border-radius: 0;
+    padding: 0;
+    border: none;
+    margin-bottom: 30px;
+}
+
+.widget-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 15px;
+    color: rgba(255, 255, 255, 0.3);
+    /* Muy sutil */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* === POMODORO PRO === */
+.pomodoro-display {
+    text-align: center;
+    margin: 20px 0;
+    padding: 30px 0;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+}
+
+.pomodoro-time {
+    font-family: 'SF Mono', 'Roboto Mono', monospace;
+    /* Monospaced para tabular alignment */
+    font-size: 3.5rem;
+    font-weight: 400;
+    color: #fff;
+    letter-spacing: -2px;
+}
+
+.pomodoro-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.pomodoro-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.pomodoro-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.pomodoro-mode-switch {
+    display: flex;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 0;
+}
+
+.pomodoro-mode-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pomodoro-mode-btn.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Configs */
+.pomodoro-settings {
+    background: rgba(20, 20, 25, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+.pomodoro-settings.show {
+    display: block;
+    animation: fadeIn 0.2s;
+}
+
+.pomodoro-input {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: #fff;
+    font-family: inherit;
+    text-align: center;
+    width: 60px;
+}
+
+/* === CALENDARIO PRO === */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.calendar-header-day {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.calendar-day {
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    cursor: default;
+    margin: 0 auto;
+    transition: all 0.2s;
+}
+
+.calendar-day:hover:not(.empty) {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.calendar-day.today {
+    background: #fff;
+    color: #000;
+    font-weight: 600;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.calendar-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.calendar-month-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.calendar-nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.calendar-nav-btn:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+}
+
+
+/* === TO-DO PRO === */
+.todo-input-container {
+    margin-bottom: 20px;
+}
+
+.todo-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 0.9rem;
+    padding: 8px 0;
+    transition: border-color 0.2s;
+}
+
+.todo-input:focus {
+    outline: none;
+    border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.todo-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    transition: background 0.2s;
+}
+
+.todo-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.todo-checkbox {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 4px;
+    /* Alineado con texto */
+    transition: all 0.2s;
+    position: relative;
+}
+
+.todo-checkbox:checked {
+    background: #fff;
+    border-color: #fff;
+}
+
+.todo-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 9px;
+    height: 9px;
+    background: #000;
+    /* Check mark simple con mask o clip-path sería mejor, pero esto sirve */
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") no-repeat center;
+    background-color: #000;
+}
+
+.todo-text {
+    flex: 1;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.todo-item.completed .todo-text {
+    color: rgba(255, 255, 255, 0.3);
+    text-decoration: line-through;
+}
+
+.todo-delete {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.todo-item:hover .todo-delete {
+    opacity: 1;
+}
+
+.todo-delete:hover {
+    color: #ff4444;
+}
+
+/* === QUOTES PRO === */
+.quote-text {
+    font-family: 'Athelas', 'Seravek', 'Helvetica Neue', serif;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    line-height: 1.6;
+    margin: 20px 0;
+    position: relative;
+    padding: 0 10px;
+}
+
+.quote-text::before {
+    content: '“';
+    font-family: serif;
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.05);
+    position: absolute;
+    top: -20px;
+    left: -10px;
+}
+
+.quote-author {
+    display: block;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+.quote-refresh-btn {
+    display: block;
+    margin: 20px auto 0;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quote-refresh-btn:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+/* Animations & Mobile */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake-pro {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+.widget-shake {
+    animation: shake-pro 0.4s ease-in-out;
+    border: 1px solid rgba(255, 68, 68, 0.3) !important;
+}
+
+@media (max-width: 768px) {
+    .widgets-sidebar {
+        width: 100%;
+        right: -100%;
+        padding: 20px;
+    }
+}
