@@ -1,0 +1,152 @@
+[
+    {
+        "id": "cyberpunk",
+        "name": "Cyberpunk",
+        "description": "Neones vibrantes y estética futurista",
+        "category": "premium",
+        "background": {
+            "type": "gradient",
+            "gradient": "linear-gradient(135deg, #FF006E 0%, #8338EC 50%, #3A86FF 100%)"
+        },
+        "panel": {
+            "bg": "#0e0a24",
+            "bgRgb": "14, 10, 36",
+            "opacity": 0.15,
+            "blur": 15,
+            "radius": 8,
+            "shadowEnabled": true,
+            "shadowColor": "#FF006E",
+            "shadowBlur": 30
+        },
+        "colors": {
+            "text": "#00F5FF",
+            "textSecondary": "#FF006E",
+            "accent": "#FF006E",
+            "greeting": "#00F5FF",
+            "name": "#FF006E",
+            "clock": "#00F5FF",
+            "date": "#8338EC"
+        },
+        "timeRange": "night"
+    },
+    {
+        "id": "minimalist-light",
+        "name": "Minimalista Claro",
+        "description": "Diseño limpio y elegante para el día",
+        "category": "premium",
+        "background": {
+            "type": "gradient",
+            "gradient": "linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 50%, #E8E8E8 100%)"
+        },
+        "panel": {
+            "bg": "#FFFFFF",
+            "bgRgb": "255, 255, 255",
+            "opacity": 0.95,
+            "blur": 2,
+            "radius": 8,
+            "shadowEnabled": true,
+            "shadowColor": "#CCCCCC",
+            "shadowBlur": 10
+        },
+        "colors": {
+            "text": "#1A1A1A",
+            "textSecondary": "#666666",
+            "accent": "#000000",
+            "greeting": "#1A1A1A",
+            "name": "#000000",
+            "clock": "#1A1A1A",
+            "date": "#666666"
+        },
+        "timeRange": "day"
+    },
+    {
+        "id": "minimalist-dark",
+        "name": "Minimalista Oscuro",
+        "description": "Diseño limpio y elegante para la noche",
+        "category": "premium",
+        "background": {
+            "type": "gradient",
+            "gradient": "linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 50%, #1A1A1A 100%)"
+        },
+        "panel": {
+            "bg": "#121212",
+            "bgRgb": "18, 18, 18",
+            "opacity": 0.9,
+            "blur": 2,
+            "radius": 8,
+            "shadowEnabled": true,
+            "shadowColor": "#000000",
+            "shadowBlur": 15
+        },
+        "colors": {
+            "text": "#E0E0E0",
+            "textSecondary": "#B0B0B0",
+            "accent": "#FFFFFF",
+            "greeting": "#E0E0E0",
+            "name": "#FFFFFF",
+            "clock": "#E0E0E0",
+            "date": "#B0B0B0"
+        },
+        "timeRange": "night"
+    },
+    {
+        "id": "nature",
+        "name": "Naturaleza",
+        "description": "Tonos verdes orgánicos y relajantes",
+        "category": "premium",
+        "background": {
+            "type": "gradient",
+            "gradient": "linear-gradient(135deg, #134E4A 0%, #14532D 50%, #365314 100%)"
+        },
+        "panel": {
+            "bg": "#14532d",
+            "bgRgb": "20, 83, 45",
+            "opacity": 0.12,
+            "blur": 10,
+            "radius": 12,
+            "shadowEnabled": true,
+            "shadowColor": "#001a17",
+            "shadowBlur": 20
+        },
+        "colors": {
+            "text": "#D1FAE5",
+            "textSecondary": "#A7F3D0",
+            "accent": "#86EFAC",
+            "greeting": "#D1FAE5",
+            "name": "#86EFAC",
+            "clock": "#D1FAE5",
+            "date": "#A7F3D0"
+        },
+        "timeRange": "day"
+    },
+    {
+        "id": "ocean",
+        "name": "Oceánico",
+        "description": "Azules profundos y tranquilos",
+        "category": "premium",
+        "background": {
+            "type": "gradient",
+            "gradient": "linear-gradient(135deg, #0C4A6E 0%, #075985 50%, #0369A1 100%)"
+        },
+        "panel": {
+            "bg": "#0c4a6e",
+            "bgRgb": "12, 74, 110",
+            "opacity": 0.15,
+            "blur": 10,
+            "radius": 12,
+            "shadowEnabled": true,
+            "shadowColor": "#000000",
+            "shadowBlur": 15
+        },
+        "colors": {
+            "text": "#E0F2FE",
+            "textSecondary": "#BAE6FD",
+            "accent": "#38BDF8",
+            "greeting": "#E0F2FE",
+            "name": "#38BDF8",
+            "clock": "#E0F2FE",
+            "date": "#BAE6FD"
+        },
+        "timeRange": "any"
+    }
+]
