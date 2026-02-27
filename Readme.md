@@ -5,16 +5,16 @@
 
 ### Tu nueva pestaña, reinventada.
 
-[![Versión](https://img.shields.io/badge/versión-2.0.0-6c63ff?style=for-the-badge)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi)
-[![Chrome](https://img.shields.io/badge/Chrome-Compatible-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi)
-[![Manifest v3](https://img.shields.io/badge/Manifest-v3-34A853?style=for-the-badge)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi)
-[![Licencia](https://img.shields.io/badge/licencia-MIT-orange?style=for-the-badge)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi)
+[![Versión](https://img.shields.io/badge/versión-2.0.0-6c63ff?style=for-the-badge)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0)
+[![Chrome](https://img.shields.io/badge/Chrome-Compatible-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0)
+[![Manifest v3](https://img.shields.io/badge/Manifest-v3-34A853?style=for-the-badge)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0)
+[![Licencia](https://img.shields.io/badge/licencia-MIT-orange?style=for-the-badge)](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0)
 
 </div>
 
 ---
 
-![Pantalla principal del Tablero Ayarachi 2.0](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/v2_pantalla_principal.png?raw=true)
+![Pantalla principal del Tablero Ayarachi 2.0](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/v2_pantalla_principal.png?raw=true)
 
 **Tablero Menú Ayarachi 2.0** es una extensión para Google Chrome que transforma tu página de nueva pestaña en un **centro de control personal**: accesos directos, buscador inteligente, reloj, clima, notas y mucho más. Diseñado con una estética oscura minimalista y arquitectura **Manifest v3**.
 
@@ -45,7 +45,7 @@
 
 La pantalla principal combina todo lo que necesitás en cero clics: saludo personalizado según el momento del día, reloj en tiempo real, temperatura local y accesos a tus sitios favoritos.
 
-![Pantalla principal v1](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Inicioaplicacion.png?raw=true)
+![Pantalla principal v1](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/Inicioaplicacion.png?raw=true)
 
 **Lo que ves al abrir una nueva pestaña:**
 - 👋 **Saludo dinámico** — "Buenos días / Buenas tardes / Buenas noches" según la hora, personalizable con tu nombre
@@ -60,7 +60,7 @@ La pantalla principal combina todo lo que necesitás en cero clics: saludo perso
 
 Organizá tus links favoritos de manera profesional, ahora con **búsqueda** y **carpetas**.
 
-![Gestión de accesos v1](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Accesosparagestionarlinks.png?raw=true)
+![Gestión de accesos v1](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/Accesosparagestionarlinks.png?raw=true)
 
 - ➕ **Añadir accesos** con nombre, URL e ícono automático
 - 📁 **Carpetas** para agrupar accesos por categoría *(nuevo en v2.0)*
@@ -74,7 +74,7 @@ Organizá tus links favoritos de manera profesional, ahora con **búsqueda** y *
 
 Cambiá tu motor de búsqueda con un solo clic, sin salir de la nueva pestaña.
 
-![Selector de motor de búsqueda](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Elegirnavegadoresalternodeformarapida.png?raw=true)
+![Selector de motor de búsqueda](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/Elegirnavegadoresalternodeformarapida.png?raw=true)
 
 **Motores disponibles:**
 `Google` · `DuckDuckGo` · `Bing` · `YouTube` · `Wikipedia` · `Ecosia`
@@ -85,7 +85,7 @@ Cambiá tu motor de búsqueda con un solo clic, sin salir de la nueva pestaña.
 
 La pestaña es tuya — personalizá el fondo como quieras.
 
-![Personalización de apariencia](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Modificandoapariencia.png?raw=true)
+![Personalización de apariencia](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/Modificandoapariencia.png?raw=true)
 
 **Opciones de fondo:**
 - 🌈 **10+ degradados predefinidos** — Noon to Dusk, YouTube, Cool Brown, Harmonic Energy, Playing with Reds, Sunny Days, Green Beach, Intuitive Purple, Emerald Water, Lemon Twist
@@ -98,7 +98,7 @@ La pestaña es tuya — personalizá el fondo como quieras.
 
 Añadí vida a tu nueva pestaña con fondos animados únicos. Los doodles son ilustraciones vectoriales animadas que se integran perfectamente con el tema oscuro.
 
-![Fondo y Doodles](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/v2_fondo_y_doodle.png?raw=true)
+![Fondo y Doodles](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/v2_fondo_y_doodle.png?raw=true)
 
 ---
 
@@ -117,7 +117,7 @@ Un bloc de notas siempre accesible sin salir de la nueva pestaña.
 
 El panel de ajustes fue completamente rediseñado en v2.0 con **7 secciones** categorizadas:
 
-![Panel de configuración v2.0](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/v2_configuracion_general.png?raw=true)
+![Panel de configuración v2.0](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/v2_configuracion_general.png?raw=true)
 
 | Tab | Descripción |
 |---|---|
@@ -135,7 +135,7 @@ El panel de ajustes fue completamente rediseñado en v2.0 con **7 secciones** ca
 
 Hacé backup de toda tu configuración o trasladala a otro dispositivo con un solo clic.
 
-![Importar y exportar datos](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Importardatoseexportar.png?raw=true)
+![Importar y exportar datos](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/Importardatoseexportar.png?raw=true)
 
 Los datos se guardan en un archivo `data.json` que incluye:
 - ✅ Todos tus accesos directos
@@ -157,7 +157,7 @@ Para usar esta extensión como una página de nueva pestaña en Chrome/Brave/Edg
 
 **1.** 📥 Descargá o cloná este repositorio:
 ```bash
-git clone https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi.git
+git clone https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0.git
 ```
 
 **2.** 🌐 Abrí tu navegador y ve a:
@@ -189,7 +189,7 @@ chrome://extensions
 
 ## 👨‍💻 Sobre el Autor
 
-![Acerca del autor](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/AcercadelautorAyarachi.png?raw=true)
+![Acerca del autor](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi-2.0/blob/main/img-md/AcercadelautorAyarachi.png?raw=true)
 
 Creado con 💜 por **Héctor Daniel Ayarachi Fuentes**.
 
