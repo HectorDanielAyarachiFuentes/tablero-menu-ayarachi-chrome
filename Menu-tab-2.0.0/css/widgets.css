@@ -111,38 +111,230 @@
 }
 
 /* === POMODORO PRO === */
-.pomodoro-display {
-    text-align: center;
-    margin: 20px 0;
-    padding: 30px 0;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: 12px;
+.pomo-settings-icon-btn {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.06);
+    border: none;
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    color: rgba(255, 255, 255, 0.45);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.pomo-settings-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+/* Config panel */
+.pomo-config-panel {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.2s ease, margin 0.3s ease;
+    margin-bottom: 0;
+}
+
+.pomo-config-panel.show {
+    max-height: 120px;
+    opacity: 1;
+    margin-bottom: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.pomo-config-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+}
+
+.pomo-config-row label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    width: 60px;
+    flex-shrink: 0;
+}
+
+.pomo-config-unit {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.pomo-config-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    padding: 2px 4px;
+}
+
+.pomo-step-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 1rem;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.15s;
+    line-height: 1;
+}
+
+.pomo-step-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Mode switch */
+.pomodoro-mode-switch {
+    display: flex;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 16px;
+    gap: 3px;
+}
+
+.pomodoro-mode-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 7px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+}
+
+.pomodoro-mode-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Ring */
+.pomo-ring-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 16px;
+}
+
+.pomo-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.pomo-ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 6;
+}
+
+.pomo-ring-progress {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.8);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.4s;
+}
+
+/* Focus = warm amber, break = teal */
+.pomo-ring-container[data-mode="short-break"] .pomo-ring-progress {
+    stroke: rgba(100, 220, 180, 0.85);
+}
+
+.pomo-ring-container.running .pomo-ring-progress {
+    stroke: rgba(255, 190, 80, 0.9);
+}
+
+.pomo-ring-container[data-mode="short-break"].running .pomo-ring-progress {
+    stroke: rgba(80, 220, 180, 0.9);
+}
+
+.pomo-ring-container.pomo-complete .pomo-ring-progress {
+    stroke: rgba(120, 255, 150, 0.9);
+    filter: drop-shadow(0 0 6px rgba(120, 255, 150, 0.6));
+}
+
+.pomo-ring-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
 }
 
 .pomodoro-time {
     font-family: 'SF Mono', 'Roboto Mono', monospace;
-    /* Monospaced para tabular alignment */
-    font-size: 3.5rem;
-    font-weight: 400;
+    font-size: 2.6rem;
+    font-weight: 300;
     color: #fff;
-    letter-spacing: -2px;
+    letter-spacing: -1px;
+    line-height: 1;
+    transition: color 0.5s;
 }
 
+.pomo-mode-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+}
+
+/* Running pulse */
+@keyframes pomoRingPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.pomo-ring-container.running .pomo-ring-progress {
+    animation: pomoRingPulse 2s ease-in-out infinite;
+}
+
+/* Controls */
 .pomodoro-controls {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-top: 15px;
+    gap: 12px;
+    margin-top: 4px;
 }
 
 .pomodoro-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid transparent;
-    border-radius: 8px;
-    width: 42px;
-    height: 42px;
-    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    width: 46px;
+    height: 46px;
+    color: rgba(255, 255, 255, 0.85);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -151,62 +343,40 @@
 }
 
 .pomodoro-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.15);
     color: #fff;
+    transform: scale(1.06);
 }
 
-.pomodoro-mode-switch {
-    display: flex;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    padding: 4px;
-    margin-bottom: 0;
+.pomodoro-btn:active {
+    transform: scale(0.95);
 }
 
-.pomodoro-mode-btn {
-    flex: 1;
-    border: none;
+.pomodoro-btn-reset {
+    width: 38px;
+    height: 38px;
+    align-self: center;
     background: transparent;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 6px 0;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.pomodoro-mode-btn.active {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-/* Configs */
-.pomodoro-settings {
-    background: rgba(20, 20, 25, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    display: none;
-}
-
-.pomodoro-settings.show {
-    display: block;
-    animation: fadeIn 0.2s;
 }
 
 .pomodoro-input {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    padding: 4px 8px;
-    color: #fff;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
     font-family: inherit;
     text-align: center;
-    width: 60px;
+    width: 36px;
+    font-size: 0.9rem;
+}
+
+.pomodoro-input:focus {
+    outline: none;
+}
+
+.pomodoro-input::-webkit-inner-spin-button,
+.pomodoro-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
 }
 
 /* === CALENDARIO PRO === */
@@ -287,94 +457,216 @@
 
 
 /* === TO-DO PRO === */
-.todo-input-container {
-    margin-bottom: 20px;
+.todo-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 4px 4px 4px 14px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.todo-input-row:focus-within {
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
 }
 
 .todo-input {
-    width: 100%;
+    flex: 1;
     background: transparent;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     color: #fff;
-    font-size: 0.9rem;
-    padding: 8px 0;
-    transition: border-color 0.2s;
+    font-size: 0.875rem;
+    padding: 7px 0;
+    min-width: 0;
+    font-family: inherit;
+}
+
+.todo-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
 }
 
 .todo-input:focus {
     outline: none;
-    border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.todo-add-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 7px;
+    width: 32px;
+    height: 32px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.todo-add-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.todo-add-btn:active {
+    transform: scale(0.95);
+}
+
+.todo-counter {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 1px 7px;
+    letter-spacing: 0;
+    min-width: 18px;
+    text-align: center;
 }
 
 .todo-list {
-    max-height: 300px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 280px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.todo-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.todo-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+}
+
+.todo-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 0 16px;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
 }
 
 .todo-item {
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-    transition: background 0.2s;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 6px 9px 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    transition: background 0.15s;
+    animation: todoSlideIn 0.2s ease both;
+}
+
+.todo-item:last-child {
+    border-bottom: none;
 }
 
 .todo-item:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.todo-item-removing {
+    opacity: 0;
+    transform: translateX(16px);
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+}
+
+@keyframes todoSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom checkbox */
+.todo-checkbox-label {
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
 }
 
 .todo-checkbox {
     appearance: none;
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
     cursor: pointer;
-    margin-top: 4px;
-    /* Alineado con texto */
+    background: transparent;
     transition: all 0.2s;
-    position: relative;
 }
 
 .todo-checkbox:checked {
-    background: #fff;
-    border-color: #fff;
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.9);
 }
 
-.todo-checkbox:checked::after {
-    content: '';
+.todo-checkmark {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 9px;
-    height: 9px;
-    background: #000;
-    /* Check mark simple con mask o clip-path sería mejor, pero esto sirve */
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") no-repeat center;
-    background-color: #000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    color: #0a0a14;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.todo-checkbox:checked~.todo-checkmark {
+    opacity: 1;
 }
 
 .todo-text {
     flex: 1;
     color: rgba(255, 255, 255, 0.85);
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    word-break: break-word;
+    transition: color 0.2s;
 }
 
 .todo-item.completed .todo-text {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.28);
     text-decoration: line-through;
+    text-decoration-color: rgba(255, 255, 255, 0.2);
 }
 
 .todo-delete {
     opacity: 0;
+    flex-shrink: 0;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.25);
     cursor: pointer;
-    transition: all 0.2s;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
 }
 
 .todo-item:hover .todo-delete {
@@ -382,7 +674,31 @@
 }
 
 .todo-delete:hover {
-    color: #ff4444;
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+@keyframes todoInputShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20%,
+    60% {
+        transform: translateX(-4px);
+    }
+
+    40%,
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+.todo-input-shake {
+    animation: todoInputShake 0.35s ease;
+    border-color: rgba(255, 100, 100, 0.5) !important;
 }
 
 /* === QUOTES PRO === */
