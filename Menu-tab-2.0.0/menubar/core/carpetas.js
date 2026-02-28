@@ -58,13 +58,29 @@ export const FolderManager = {
             linkNode.innerHTML = node.innerHTML;
             node = linkNode;
 
+            const FALLBACK_ICON = 'images/Dulce-flamenco.png';
             try {
                 const url = new URL(tile.url);
                 node.querySelector('.url').textContent = url.hostname.replace('www.', '');
-                if (url.hostname && url.hostname.includes('.')) node.querySelector('.thumb').src = `https://www.google.com/s2/favicons?sz=64&domain=${url.hostname}`;
+                const thumbEl = node.querySelector('.thumb');
+                thumbEl.onerror = function () { this.onerror = null; this.src = FALLBACK_ICON; };
+                if (url.hostname && url.hostname.includes('.') && url.protocol.startsWith('http')) {
+                    thumbEl.src = `https://www.google.com/s2/favicons?sz=64&domain=${url.hostname}`;
+                    thumbEl.onload = function () {
+                        // Google returns a 16×16 generic globe for unknown domains — show Dulce instead
+                        if (this.naturalWidth <= 16 && this.naturalHeight <= 16) {
+                            this.onload = null;
+                            this.src = FALLBACK_ICON;
+                        }
+                    };
+                } else {
+                    thumbEl.src = FALLBACK_ICON;
+                }
             } catch (e) {
                 node.querySelector('.url').textContent = tile.url;
-                node.querySelector('.thumb').src = '';
+                const thumbEl = node.querySelector('.thumb');
+                thumbEl.onerror = function () { this.onerror = null; this.src = FALLBACK_ICON; };
+                thumbEl.src = FALLBACK_ICON;
             }
 
             // Use custom icon if it exists, overwriting the default favicon
