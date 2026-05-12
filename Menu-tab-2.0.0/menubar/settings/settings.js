@@ -334,6 +334,8 @@ export function applyGradient(gradientId) {
     });
 
     document.body.style.backgroundImage = gradient.gradient;
+    // Guardar para carga ultra-rápida (Zero-Flash)
+    localStorage.setItem('lastPremiumGradient', gradient.gradient);
 }
 
 export function applyBackgroundStyles(mode = 'cover') {
