@@ -1,7 +1,6 @@
 /**
  * Punto de entrada principal de la aplicación.
- * Se encarga de inicializar todos los módulos, cargar la configuración inicial,
- * y coordinar la renderización de los componentes principales.
+ * Optimizada para carga progresiva (Layered Loading)
  */
 import { $, storageGet, storageSet } from './core/utils.js';
 import { STORAGE_KEYS } from './core/config.js';
@@ -21,144 +20,92 @@ import { FileSystem } from './system/file-system.js';
 import { widgetsManager } from './widgets/widget-manager.js';
 import { initPremiumThemes } from './settings/themes-premium.js';
 
-
 let currentBackgroundValue = '';
 
-/**
- * Escucha mensajes desde otras partes de la extensión (como el service worker).
- * Si recibe un mensaje de que se añadió un marcador, recarga los datos y
- * vuelve a renderizar los accesos para mostrar el nuevo.
- */
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-  if (message.type === 'BOOKMARK_ADDED') {
-    console.log('Mensaje de nuevo marcador recibido. Actualizando tablero...');
-    const { tiles: updatedTiles } = await storageGet(['tiles']);
-    setTiles(updatedTiles);
-    renderTiles();
-  }
-});
-
 async function init() {
-  // 1. Carga ultra-rápida desde chrome.storage.local (Prioridad Máxima)
+  // 1. CARGA CRÍTICA (Lo que el ojo ve primero)
   const settings = await storageGet(STORAGE_KEYS);
   
-  // 2. Aplicar la configuración de inmediato para mostrar la UI
-  await applySettings(settings, false);
-
-  // 3. Quitar el velo de carga YA MISMO
+  // Fase 1: Visuales esenciales (Fondo, Saludo, Colores, Iconos)
+  await applyCriticalVisuals(settings);
+  
+  // Mostrar la UI lo antes posible
   document.body.classList.remove('loading');
 
-  // 4. En segundo plano (sin bloquear), intentar sincronizar con el sistema de archivos
-  // o buscar actualizaciones en sync.
-  (async () => {
-    try {
-      const fileSettings = await FileSystem.loadDataFromFile();
-      if (fileSettings) {
-        await applySettings(fileSettings, true);
-      }
-    } catch (e) {
-      console.warn("FileSystem sync postponed/failed:", e);
-    }
-  })();
+  // Fase 2: Lógica de interacción (Buscador, Eventos) - 100ms después
+  setTimeout(() => {
+      initInteractionLogic(settings);
+  }, 100);
+
+  // Fase 3: Sistemas Pesados (Widgets, Clima, Paneles ocultos) - 500ms después
+  setTimeout(() => {
+      initHeavySystems(settings);
+      loadNonCriticalCSS();
+  }, 500);
+
+  // Fase 4: Sincronización de archivos (Baja prioridad)
+  setTimeout(async () => {
+      try {
+          const fileSettings = await FileSystem.loadDataFromFile();
+          if (fileSettings) {
+              await applyCriticalVisuals(fileSettings);
+          }
+      } catch (e) { console.warn("FS Sync postponed:", e); }
+  }, 2000);
 }
 
-async function applySettings(settings, isUpdate = false) {
-  let initialTiles = settings.tiles;
-
-  // Si no hay accesos guardados, intenta importar desde los marcadores del navegador.
-  if (!initialTiles || initialTiles.length === 0) {
-    console.log('No hay accesos guardados. Importando desde los marcadores del navegador...');
-    const bookmarks = await getBookmarks();
-    if (bookmarks.length > 0) {
-      initialTiles = bookmarks;
-      console.log(`${bookmarks.length} marcadores importados como accesos.`);
-      // Guardamos los marcadores importados para que no se vuelvan a importar la próxima vez.
-      await storageSet({ tiles: initialTiles });
-    } else {
-      // Si no se encuentran marcadores, usar la lista por defecto.
+/**
+ * Solo aplica lo que es visible en el primer "frame"
+ */
+async function applyCriticalVisuals(settings) {
+  // Procesar Tiles e Iconos
+  let initialTiles = settings.tiles || [];
+  if (initialTiles.length === 0) {
       initialTiles = [
         { type: 'link', name: 'YouTube', url: 'https://www.youtube.com/' },
         { type: 'link', name: 'Google', url: 'https://www.google.com/', favorite: true },
         { type: 'link', name: 'Wikipedia', url: 'https://es.wikipedia.org/' },
         { type: 'link', name: 'GitHub', url: 'https://github.com/' }
       ];
-      console.log('No se encontraron marcadores, usando la lista de accesos por defecto.');
-    }
   }
+  setTiles(initialTiles);
+  setTrash(settings.trash || []);
 
-  const processedTiles = initialTiles.map(t => {
-    if (!t.type && t.url) return { ...t, type: 'link' };
-    if (!t.type) t.type = 'link';
-    if (t.type === 'folder' && !t.children) t.children = [];
-    return t;
-  });
-  setTiles(processedTiles);
-
-  const initialTrash = settings.trash || [];
-  setTrash(initialTrash);
-
-  $('#userName').value = settings.userName || '';
-  $('#weatherCity').value = settings.weatherCity || '';
+  // UI Básica
   renderGreeting(settings.userName);
-  renderFavoritesInSelect();
-
-  // Aplicar colores de texto
   applyTextColors(settings);
-
-  // Aplicar fuentes de texto
   applyTextFonts(settings);
-
-  // Cargar y aplicar configuraciones de visibilidad de la UI
-  const showSearch = settings.showSearch ?? true;
-  const showWeather = settings.showWeather ?? true;
-  const showDate = settings.showDate ?? true;
-  $('.search-section').hidden = !showSearch;
-  $('#weather').hidden = !showWeather;
-  $('#date').hidden = !showDate;
-
-  // Cargar y aplicar configuración de animaciones de carga
-  const enableLoadAnimations = settings.enableLoadAnimations ?? false; // Por defecto desactivado (carga rápida)
-  if (enableLoadAnimations) {
-    document.body.classList.add('with-load-animations');
-  }
-
-
-  // --- LÓGICA DE PANELES (Prioridad: Tema Premium > Manual) ---
-  let panelBg, panelOpacity, panelBlur, panelRadius;
-
-  if (settings.activePremiumTheme && settings.premiumThemeData) {
-    const pt = settings.premiumThemeData.panel;
-    panelBg = pt.bg;
-    panelOpacity = pt.opacity;
-    panelBlur = pt.blur;
-    panelRadius = pt.radius;
-  } else {
-    panelBg = settings.panelBg || 'rgba(0, 0, 0, 0.2)';
-    panelOpacity = settings.panelOpacity ?? 0.1;
-    panelBlur = settings.panelBlur ?? 10;
-    panelRadius = settings.panelRadius ?? 12;
-  }
-
-  document.documentElement.style.setProperty('--panel-bg', panelBg);
-  document.documentElement.style.setProperty('--panel-opacity', panelOpacity);
-  document.documentElement.style.setProperty('--panel-blur', `${panelBlur}px`);
-  document.documentElement.style.setProperty('--panel-radius', `${panelRadius}px`);
-  updatePanelRgb(panelBg);
   
-  $('#panelColor').value = panelBg;
-  $('#panelOpacity').value = panelOpacity;
-  $('#panelBlur').value = panelBlur;
-  $('#panelRadius').value = panelRadius;
-  updateSliderValueSpans();
+  // Visibilidad de secciones
+  $('.search-section').hidden = !(settings.showSearch ?? true);
+  $('#weather').hidden = !(settings.showWeather ?? true);
+  $('#date').hidden = !(settings.showDate ?? true);
 
-  await storageSet({ engine: settings.engine || 'google' });
-  loadGradients(settings.gradient);
+  // Paneles y Estilos
+  const pt = (settings.activePremiumTheme && settings.premiumThemeData) ? settings.premiumThemeData.panel : null;
+  const panelBg = pt ? pt.bg : (settings.panelBg || 'rgba(0, 0, 0, 0.2)');
+  const panelOpacity = pt ? pt.opacity : (settings.panelOpacity ?? 0.1);
+  const panelBlur = pt ? pt.blur : (settings.panelBlur ?? 10);
+  const panelRadius = pt ? pt.radius : (settings.panelRadius ?? 12);
+
+  const root = document.documentElement.style;
+  root.setProperty('--panel-bg', panelBg);
+  root.setProperty('--panel-opacity', panelOpacity);
+  root.setProperty('--panel-blur', `${panelBlur}px`);
+  root.setProperty('--panel-radius', `${panelRadius}px`);
+  updatePanelRgb(panelBg);
+
+  // Renderizar Tiles (Iconos)
   renderTiles();
-  renderEditor();
-  renderNotes();
-  renderTrash();
 
-  if (!isUpdate) {
+  // Fondo (Prioridad Máxima)
+  await updateBackground();
+}
+
+/**
+ * Inicializa la lógica que el usuario usa para interactuar
+ */
+function initInteractionLogic(settings) {
     initUI();
     initTiles();
     initSearch();
@@ -170,128 +117,59 @@ async function applySettings(settings, isUpdate = false) {
       bgDisplayMode: settings.bgDisplayMode,
       isCustomBg: !!(settings.bgData || settings.bgUrl)
     });
-    await initDoodleSettings(settings.doodle || 'none');
+}
 
-    // Inicializar Temas Premium (Restaurado)
+/**
+ * Inicializa lo que puede esperar (Widgets, Clima, etc.)
+ */
+async function initHeavySystems(settings) {
     await initPremiumThemes();
-
-    // Movemos la actualización del fondo aquí para asegurar que los doodles ya estén inicializados.
-    await updateBackground();
-
-    // Inicializar Widgets
     widgetsManager.init();
-
     WeatherManager.init();
-    setInterval(WeatherManager.fetchAndRender, 1800000); // Actualiza el clima cada 30 minutos
-
-    // --- FINAL DE CARGA: Mostrar de inmediato ---
-    document.body.classList.remove('loading');
-    loadNonCriticalCSS();
-  }
+    
+    // Renderizar paneles que están ocultos por defecto
+    renderEditor();
+    renderNotes();
+    renderTrash();
+    renderFavoritesInSelect();
+    
+    // Sincronizar sliders de configuración
+    updateSliderValueSpans();
+    $('#panelColor').value = document.documentElement.style.getPropertyValue('--panel-bg').trim();
 }
 
-/**
- * Obtiene los marcadores del navegador y los convierte al formato de 'tile'.
- * @returns {Promise<Array<object>>} Una promesa que resuelve a un array de tiles.
- */
-export async function getBookmarks() {
-  // Comprobamos que la API de marcadores esté disponible.
-  if (!chrome.bookmarks) {
-    return [];
-  }
-
-  return new Promise(resolve => {
-    chrome.bookmarks.getTree(bookmarkTreeNodes => {
-      const tiles = [];
-      // Función recursiva para aplanar el árbol de marcadores.
-      function flatten(nodes) {
-        for (const node of nodes) {
-          // Si es un marcador con URL (no una carpeta), lo añadimos.
-          if (node.url) {
-            tiles.push({ type: 'link', name: node.title || new URL(node.url).hostname, url: node.url, favorite: false });
-          }
-          // Si tiene hijos (es una carpeta), seguimos buscando dentro.
-          if (node.children) {
-            flatten(node.children);
-          }
-        }
-      }
-      flatten(bookmarkTreeNodes);
-      resolve(tiles);
-    });
-  });
-}
-
-/**
- * Función centralizada para actualizar el fondo de la página.
- * Decide qué fondo mostrar según la prioridad: Doodle > Imagen > Degradado > Tema.
- */
 export async function updateBackground() {
-  // Ensure doodles are loaded before trying to find one
-  await loadDoodles();
-
+  loadDoodles(); // Síncrono ahora
   const settings = await storageGet(['doodle', 'bgData', 'bgUrl', 'gradient', 'bgDisplayMode', 'activePremiumTheme']);
   const doodleId = settings.doodle || 'none';
   const doodle = DOODLES.find(d => d.id === doodleId);
 
   const doodleBgContainer = $('#doodle-background');
-  const doodlePreviewContainer = $('#doodle-preview');
-
-  // Limpiar siempre el contenedor del doodle antes de decidir
   doodleBgContainer.innerHTML = '';
 
-  // Prioridad 1: Doodle activo
   if (doodle && doodle.id !== 'none' && doodle.template) {
     $('.wrap').style.backgroundColor = 'transparent';
-    document.body.style.backgroundImage = 'none'; // Quitar cualquier otra imagen de fondo
-
+    document.body.style.backgroundImage = 'none';
     const backgroundDoodle = document.createElement('css-doodle');
     backgroundDoodle.innerHTML = doodle.template;
     doodleBgContainer.appendChild(backgroundDoodle);
-    if (typeof backgroundDoodle.update === 'function') {
-      setTimeout(() => backgroundDoodle.update(), 0);
-    }
-  } else {
-    // No hay doodle, aplicar fondos normales (Imagen, Degradado o Tema)
+  } else if (!settings.activePremiumTheme) {
     $('.wrap').style.backgroundColor = '';
-
-    // Si hay un TEMA PREMIUM activo, NO aplicar fondo aquí (el tema lo maneja)
-    // Solo aplicar fondo si NO hay tema premium activo
-    if (!settings.activePremiumTheme) {
-      if (settings.bgData) {
-        applyBackgroundStyles(settings.bgDisplayMode);
-        document.body.style.backgroundImage = `url('${settings.bgData}')`;
-      } else if (settings.bgUrl) {
-        applyBackgroundStyles(settings.bgDisplayMode);
-        document.body.style.backgroundImage = `url('${settings.bgUrl}')`;
-      } else if (settings.gradient) {
-        applyGradient(settings.gradient);
-      } else { // Por defecto, si no hay nada, aplicar un degradado
-        applyGradient(GRADIENTS[0].id);
-      }
+    if (settings.bgData || settings.bgUrl) {
+      applyBackgroundStyles(settings.bgDisplayMode);
+      document.body.style.backgroundImage = `url('${settings.bgData || settings.bgUrl}')`;
     } else {
-      // Asegurar que si hay tema premium, no queden residuos de estilos inline en body que puedan interferir
+      applyGradient(settings.gradient || GRADIENTS[0].id);
     }
   }
-
-  // Actualizar siempre la UI de la configuración
-  updateActiveGradientButton(settings.gradient);
-  updateDoodleSelectionUI(doodleId);
 }
 
-init();
-
 function loadNonCriticalCSS() {
-  const files = [
-    'css/widgets.css',
-    'css/themes-premium.css',
-    'css/drag-drop-safe.css'
-  ];
-  
-  files.forEach(file => {
+  ['css/widgets.css', 'css/themes-premium.css', 'css/drag-drop-safe.css'].forEach(file => {
     const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = file;
+    link.rel = 'stylesheet'; link.href = file;
     document.head.appendChild(link);
   });
 }
+
+init();

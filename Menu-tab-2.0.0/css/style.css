@@ -42,11 +42,11 @@ body.with-load-animations .tab-pane {
 
 body.loading .main {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(5px);
 }
 
 .main {
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
   opacity: 1;
   transform: translateY(0);
 }
@@ -223,12 +223,7 @@ body.no-scroll {
   transform: rotate(90deg)
 }
 
-body.loading .live-info,
-body.loading .search-section,
-body.loading .tiles-section {
-  opacity: 1;
-  transform: none;
-}
+/* Reglas de carga eliminadas para evitar conflictos */
 
 .live-info {
   transition: opacity 0.5s ease-out, transform 0.5s ease-out;

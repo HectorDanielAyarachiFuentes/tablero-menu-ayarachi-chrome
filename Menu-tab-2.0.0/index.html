@@ -744,8 +744,8 @@
 
   <template id="tileTpl">
     <div class="tile" draggable="true">
-      <!-- CAMBIO: Se añade el atributo onerror. Si el ícono de Google falla (404), se reemplaza por un ícono genérico local. -->
-      <img class="thumb" width="56" height="56" alt=""
+      <!-- CAMBIO: Se añade loading="lazy" para mejorar rendimiento inicial -->
+      <img class="thumb" width="56" height="56" alt="" loading="lazy"
         onerror="this.onerror=null; this.src='images/Dulce-flamenco.png';">
       <div class="info">
         <div class="title"></div>
