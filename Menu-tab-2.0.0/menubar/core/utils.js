@@ -11,6 +11,8 @@ export const $ = s => document.querySelector(s);
 export const $$ = s => Array.from(document.querySelectorAll(s));
 
 let saveDebounceTimer;
+let syncBuffer = {};
+let syncTimer = null;
 
 // storage helpers supporting chrome.storage.sync or fallback to localStorage
 export const storageGet = (keys, useCache = false) => new Promise(resolve => {
@@ -33,33 +35,35 @@ export const storageSet = (obj) => {
       // Local no tiene los límites tan estrictos de sync.
       await new Promise(res => chrome.storage.local.set(obj, res));
 
-      // 2. Intentamos guardar en sync para la sincronización entre dispositivos.
+      // 2. Intentamos guardar en sync para la sincronización entre dispositivos con DEBOUNCE.
       if (chrome.storage.sync) {
-        const syncObj = {};
-        let hasLargeItems = false;
-
-        for (const key in obj) {
-          // Calculamos el tamaño aproximado en bytes
-          const size = JSON.stringify(obj[key]).length;
-          
-          // El límite de Chrome Sync es ~8KB (8192 bytes) por item.
-          // Si el item es más pequeño que 7KB, lo incluimos en la sincronización.
-          if (size < 7000) {
-            syncObj[key] = obj[key];
-          } else {
-            hasLargeItems = true;
-            // Silenciamos la advertencia de tamaño para no molestar al usuario, 
-            // ya que el guardado local funciona correctamente.
-          }
-        }
-
-        if (Object.keys(syncObj).length > 0) {
-          chrome.storage.sync.set(syncObj, () => {
-            if (chrome.runtime.lastError) {
-              console.error("Error en chrome.storage.sync:", chrome.runtime.lastError.message);
+        // Acumulamos los cambios en el buffer
+        Object.assign(syncBuffer, obj);
+        
+        // Limpiamos el temporizador anterior
+        if (syncTimer) clearTimeout(syncTimer);
+        
+        // Creamos un nuevo temporizador (1 segundo de espera)
+        syncTimer = setTimeout(() => {
+          const syncObj = {};
+          for (const key in syncBuffer) {
+            const size = JSON.stringify(syncBuffer[key]).length;
+            if (size < 7000) {
+              syncObj[key] = syncBuffer[key];
             }
-          });
-        }
+          }
+          
+          if (Object.keys(syncObj).length > 0) {
+            chrome.storage.sync.set(syncObj, () => {
+              if (chrome.runtime.lastError) {
+                console.warn("Sync quota warning (safe to ignore):", chrome.runtime.lastError.message);
+              }
+              // Limpiar el buffer después de intentar sincronizar
+              syncBuffer = {};
+            });
+          }
+          syncTimer = null;
+        }, 1000); 
       }
       resolve();
     } else {
