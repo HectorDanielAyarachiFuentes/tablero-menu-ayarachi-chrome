@@ -11,6 +11,9 @@ export const WeatherManager = {
         // Adjuntar listeners una sola vez
         $('#weatherCity').addEventListener('change', this.handleCityChange);
         $('#weather').addEventListener('click', this.handleWidgetClick);
+
+        // Carga inicial
+        this.fetchAndRender();
     },
     async fetchAndRender() {
         const weatherEl = $('#weather');
