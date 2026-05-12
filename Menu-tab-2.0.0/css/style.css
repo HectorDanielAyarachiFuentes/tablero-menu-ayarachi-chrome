@@ -11,7 +11,7 @@
   --panel-text-color: #ffffff;
   --panel-text-secondary-color: rgba(255, 255, 255, 0.7);
   --panel-bg: rgba(0, 0, 0, 0.2);
-  --accent-color: #ffffff;
+  --accent-color: #a855f7;
   --button-bg: rgba(255, 255, 255, 0.05);
   --button-hover-bg: rgba(255, 255, 255, 0.1);
   --panel-radius: 12px;
@@ -670,12 +670,27 @@ a.tile {
 }
 
 .add-note-btn {
-  background: var(--accent-color) !important;
-  font-size: 28px;
-  font-weight: 300;
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 8px !important;
+  background: linear-gradient(135deg, var(--accent-color), #8b5cf6) !important;
+  color: #fff !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.add-note-btn:hover {
+  filter: brightness(1.1);
+  transform: scale(1.1) translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .notes-body {
@@ -962,13 +977,24 @@ a.tile {
 }
 
 .btn.primary {
-  background: var(--accent-color);
-  border-color: var(--accent-color);
-  color: white
+  background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff !important;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
 .btn.primary:hover {
-  background: hsl(288, 41%, 48%)
+  filter: brightness(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn.primary svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  stroke-width: 3px;
 }
 
 .btn.full-width {
