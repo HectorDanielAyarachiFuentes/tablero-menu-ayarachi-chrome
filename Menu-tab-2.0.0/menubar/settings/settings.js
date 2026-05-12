@@ -481,7 +481,7 @@ export function applyTextColors(settings) {
 
     Object.entries(textColors).forEach(([key, config]) => {
         let color;
-        if (isPremium && premiumColors[config.premiumKey]) {
+        if (isPremium && premiumColors && premiumColors[config.premiumKey]) {
             color = premiumColors[config.premiumKey];
         } else {
             color = settings[key] || '#FFFFFF';
@@ -508,7 +508,7 @@ export function applyTextFonts(settings) {
 
     Object.entries(textFonts).forEach(([key, config]) => {
         let font;
-        if (isPremium && premiumFonts[config.premiumKey]) {
+        if (isPremium && premiumFonts && premiumFonts[config.premiumKey]) {
             font = premiumFonts[config.premiumKey];
         } else {
             font = settings[key] || '\'Poppins\', sans-serif';

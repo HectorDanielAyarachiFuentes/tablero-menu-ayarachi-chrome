@@ -19,6 +19,77 @@ export function initEditor() {
     if (searchInput) {
         searchInput.addEventListener('input', () => renderEditor());
     }
+
+    const syncBtn = $('#syncBookmarks');
+    if (syncBtn) {
+        syncBtn.addEventListener('click', handleSyncBookmarks);
+    }
+}
+
+async function handleSyncBookmarks() {
+    if (!window.chrome || !chrome.bookmarks) {
+        alert('La API de marcadores no está disponible en este entorno.');
+        return;
+    }
+
+    try {
+        const bookmarkTreeNodes = await new Promise(resolve => chrome.bookmarks.getTree(resolve));
+        const bookmarksToSync = [];
+        
+        function processNodes(nodes) {
+            for (const node of nodes) {
+                if (node.url) {
+                    // Ignorar URLs internas de Chrome
+                    if (!node.url.startsWith('chrome://') && !node.url.startsWith('about:')) {
+                        bookmarksToSync.push({ name: node.title, url: node.url });
+                    }
+                }
+                if (node.children) {
+                    processNodes(node.children);
+                }
+            }
+        }
+        
+        processNodes(bookmarkTreeNodes);
+        
+        if (bookmarksToSync.length === 0) {
+            alert('No se encontraron marcadores válidos para sincronizar.');
+            return;
+        }
+
+        const existingUrls = new Set();
+        function collectUrls(items) {
+            items.forEach(item => {
+                if (item.url) existingUrls.add(item.url);
+                if (item.children) collectUrls(item.children);
+            });
+        }
+        collectUrls(tiles);
+
+        let addedCount = 0;
+        bookmarksToSync.forEach(bm => {
+            if (!existingUrls.has(bm.url)) {
+                tiles.push({
+                    type: 'link',
+                    name: bm.name || 'Sin título',
+                    url: bm.url,
+                    icon: ''
+                });
+                addedCount++;
+            }
+        });
+
+        if (addedCount > 0) {
+            saveAndRender();
+            renderEditor();
+            alert(`¡Sincronización completada! Se añadieron ${addedCount} nuevos accesos de tus marcadores.`);
+        } else {
+            alert('Todos tus marcadores ya están presentes en el tablero.');
+        }
+    } catch (error) {
+        console.error('Error al sincronizar marcadores:', error);
+        alert('Hubo un error al intentar sincronizar los marcadores.');
+    }
 }
 
 export function renderEditor() {
