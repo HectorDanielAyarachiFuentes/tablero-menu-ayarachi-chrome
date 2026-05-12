@@ -15,7 +15,8 @@ import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
 import { initSettings, loadGradients, applyGradient, applyBackgroundStyles, applyTextColors, applyTextFonts } from './settings/settings.js';
 import { GRADIENTS } from '../utils/gradients.js';
 import { WeatherManager } from '../utils/tiempo.js';
-import { DOODLES, loadDoodles, initDoodleSettings, updateDoodleSelectionUI } from './settings/doodles.js';
+import { loadDoodles, initDoodleSettings, updateDoodleSelectionUI } from './settings/doodles.js';
+import { DOODLES_LIST } from './settings/doodles-list.js';
 import { FileSystem } from './system/file-system.js';
 import { widgetsManager } from './widgets/widget-manager.js';
 import { initPremiumThemes } from './settings/themes-premium.js';
@@ -23,42 +24,36 @@ import { initPremiumThemes } from './settings/themes-premium.js';
 let currentBackgroundValue = '';
 
 async function init() {
-  // 1. CARGA CRÍTICA (Lo que el ojo ve primero)
+  // 1. CARGA CRÍTICA
   const settings = await storageGet(STORAGE_KEYS);
   
-  // Fase 1: Visuales esenciales (Fondo, Saludo, Colores, Iconos)
   await applyCriticalVisuals(settings);
-  
-  // Mostrar la UI lo antes posible
   document.body.classList.remove('loading');
 
-  // Fase 2: Lógica de interacción (Buscador, Eventos) - 100ms después
+  // Escuchar cambios de fondo desde la configuración (evita dependencias circulares)
+  window.addEventListener('background-changed', () => updateBackground());
+
+  // Fase 2: Lógica de interacción
   setTimeout(() => {
       initInteractionLogic(settings);
   }, 100);
 
-  // Fase 3: Sistemas Pesados (Widgets, Clima, Paneles ocultos) - 500ms después
+  // Fase 3: Sistemas Pesados
   setTimeout(() => {
       initHeavySystems(settings);
       loadNonCriticalCSS();
   }, 500);
 
-  // Fase 4: Sincronización de archivos (Baja prioridad)
+  // Fase 4: Sincronización
   setTimeout(async () => {
       try {
           const fileSettings = await FileSystem.loadDataFromFile();
-          if (fileSettings) {
-              await applyCriticalVisuals(fileSettings);
-          }
+          if (fileSettings) await applyCriticalVisuals(fileSettings);
       } catch (e) { console.warn("FS Sync postponed:", e); }
   }, 2000);
 }
 
-/**
- * Solo aplica lo que es visible en el primer "frame"
- */
 async function applyCriticalVisuals(settings) {
-  // Procesar Tiles e Iconos
   let initialTiles = settings.tiles || [];
   if (initialTiles.length === 0) {
       initialTiles = [
@@ -71,17 +66,14 @@ async function applyCriticalVisuals(settings) {
   setTiles(initialTiles);
   setTrash(settings.trash || []);
 
-  // UI Básica
   renderGreeting(settings.userName);
   applyTextColors(settings);
   applyTextFonts(settings);
   
-  // Visibilidad de secciones
   $('.search-section').hidden = !(settings.showSearch ?? true);
   $('#weather').hidden = !(settings.showWeather ?? true);
   $('#date').hidden = !(settings.showDate ?? true);
 
-  // Paneles y Estilos
   const pt = (settings.activePremiumTheme && settings.premiumThemeData) ? settings.premiumThemeData.panel : null;
   const panelBg = pt ? pt.bg : (settings.panelBg || 'rgba(0, 0, 0, 0.2)');
   const panelOpacity = pt ? pt.opacity : (settings.panelOpacity ?? 0.1);
@@ -95,16 +87,10 @@ async function applyCriticalVisuals(settings) {
   root.setProperty('--panel-radius', `${panelRadius}px`);
   updatePanelRgb(panelBg);
 
-  // Renderizar Tiles (Iconos)
   renderTiles();
-
-  // Fondo (Prioridad Máxima)
   await updateBackground();
 }
 
-/**
- * Inicializa la lógica que el usuario usa para interactuar
- */
 function initInteractionLogic(settings) {
     initUI();
     initTiles();
@@ -119,30 +105,24 @@ function initInteractionLogic(settings) {
     });
 }
 
-/**
- * Inicializa lo que puede esperar (Widgets, Clima, etc.)
- */
 async function initHeavySystems(settings) {
     await initPremiumThemes();
     widgetsManager.init();
     WeatherManager.init();
     
-    // Renderizar paneles que están ocultos por defecto
     renderEditor();
     renderNotes();
     renderTrash();
     renderFavoritesInSelect();
     
-    // Sincronizar sliders de configuración
     updateSliderValueSpans();
     $('#panelColor').value = document.documentElement.style.getPropertyValue('--panel-bg').trim();
 }
 
 export async function updateBackground() {
-  loadDoodles(); // Síncrono ahora
   const settings = await storageGet(['doodle', 'bgData', 'bgUrl', 'gradient', 'bgDisplayMode', 'activePremiumTheme']);
   const doodleId = settings.doodle || 'none';
-  const doodle = DOODLES.find(d => d.id === doodleId);
+  const doodle = DOODLES_LIST.find(d => d.id === doodleId);
 
   const doodleBgContainer = $('#doodle-background');
   doodleBgContainer.innerHTML = '';

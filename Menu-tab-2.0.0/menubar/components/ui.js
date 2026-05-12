@@ -11,6 +11,7 @@ import { PREDEFINED_GREETINGS } from '../../utils/greetings-list.js';
 import { FileSystem } from '../system/file-system.js';
 import { initPanelSettings } from '../settings/settings-panels.js';
 import { ensurePremiumThemesUI } from '../settings/themes-premium.js';
+import { initDoodleSettings } from '../settings/doodles.js';
 
 export function initUI() {
     updateClock();
@@ -68,7 +69,7 @@ export function initUI() {
  * Cambia a una pestaña específica en el panel de configuración.
  * @param {string} tabId - El ID de la pestaña a activar (ej. 'datos', 'general').
  */
-export function switchToTab(tabId) {
+export async function switchToTab(tabId) {
     const tabButtons = $$('.tab-btn');
     const tabPanes = $$('.tab-pane');
     tabButtons.forEach(b => b.classList.remove('active'));
@@ -85,6 +86,12 @@ export function switchToTab(tabId) {
     // Si entramos en la pestaña de fondo, asegurar que los temas premium estén renderizados
     if (tabId === 'fondo') {
         ensurePremiumThemesUI();
+    }
+
+    // Si entramos en la pestaña de doodle, asegurar que la lista esté cargada
+    if (tabId === 'doodle') {
+        const { doodle } = await storageGet(['doodle']);
+        initDoodleSettings(doodle || 'none');
     }
 }
 
