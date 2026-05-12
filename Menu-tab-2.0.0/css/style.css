@@ -124,29 +124,49 @@ body.no-scroll {
   gap: 8px
 }
 
-.controls button {
-  background: var(--button-bg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--panel-text-color);
-  font-size: 18px;
-  padding: 8px;
-  border-radius: 10px;
-  cursor: pointer;
+#openNotes, #openSettings {
+  background: var(--panel-bg) !important;
+  backdrop-filter: blur(var(--panel-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--panel-blur)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--panel-text-color) !important;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--panel-radius) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all .2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: var(--panel-shadow, 0 4px 15px rgba(0, 0, 0, 0.2));
+  margin-left: 5px;
+}
+
+#openNotes:hover, #openSettings:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-2px) scale(1.05);
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(var(--accent-color-rgb), 0.3);
+}
+
+#openNotes svg, #openSettings svg {
+  width: 22px;
+  height: 22px;
+  transition: all 0.3s ease;
+}
+
+#openNotes:hover svg, #openSettings:hover svg {
+  filter: drop-shadow(0 0 5px var(--accent-color));
+}
+
+#openNotes:active, #openSettings:active {
+  transform: scale(0.95);
 }
 
 .back-btn {
   font-size: 24px;
   font-weight: bold;
   padding: 0 10px
-}
-
-.controls button:hover {
-  background: var(--button-hover-bg);
-  transform: scale(1.1);
 }
 
 .brand strong {
