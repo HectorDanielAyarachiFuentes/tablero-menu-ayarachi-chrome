@@ -17,9 +17,17 @@
     // CAMBIO: Se usa chrome.storage.local explícitamente por ser más rápido.
     const keys = [
       'userName', 'use12HourFormat', 'showSeconds', 'greetingPreference', 'customGreetings',
-      'greetingColor', 'nameColor', 'clockColor', 'dateColor'
+      'greetingColor', 'nameColor', 'clockColor', 'dateColor',
+      'panelBg', 'activePremiumTheme', 'premiumThemeData'
     ];
     const settings = await new Promise(resolve => chrome.storage.local.get(keys, resolve));
+
+    // --- MIGRACIÓN DE COLOR AZUL (Limpieza de configuración vieja) ---
+    if (settings.panelBg === '#0e193a') {
+      const neutralBg = 'rgba(0, 0, 0, 0.2)';
+      chrome.storage.local.set({ panelBg: neutralBg });
+      settings.panelBg = neutralBg;
+    }
 
     function getRandomGreeting(period, greetingsList) {
         const options = greetingsList.filter(g => g.period === period);
@@ -52,12 +60,48 @@
       greetingEl.innerHTML = `${greetingText}${namePart}`;
     }
 
-    // --- Aplicar Colores de Texto ---
+    // --- Aplicar Colores de Texto (Prioridad: Tema Premium > Manual) ---
     const rootStyle = document.documentElement.style;
-    rootStyle.setProperty('--greeting-color', settings.greetingColor || '#FFFFFF');
-    rootStyle.setProperty('--name-color', settings.nameColor || '#FFFFFF');
-    rootStyle.setProperty('--clock-color', settings.clockColor || '#FFFFFF');
-    rootStyle.setProperty('--date-color', settings.dateColor || '#FFFFFF');
+    const isPremium = !!(settings.activePremiumTheme && settings.premiumThemeData);
+    const premiumColors = isPremium ? settings.premiumThemeData.colors : null;
+
+    if (isPremium && premiumColors) {
+      rootStyle.setProperty('--greeting-color', premiumColors.greeting);
+      rootStyle.setProperty('--name-color', premiumColors.name);
+      rootStyle.setProperty('--clock-color', premiumColors.clock);
+      rootStyle.setProperty('--date-color', premiumColors.date);
+      // Colores de panel si están disponibles
+      rootStyle.setProperty('--panel-text-color', premiumColors.text);
+      rootStyle.setProperty('--panel-text-secondary-color', premiumColors.textSecondary);
+      rootStyle.setProperty('--accent-color', premiumColors.accent);
+      
+      // Aplicar fondo de panel premium
+      const pt = settings.premiumThemeData.panel;
+      rootStyle.setProperty('--panel-bg', pt.bg);
+      rootStyle.setProperty('--panel-opacity', pt.opacity);
+      rootStyle.setProperty('--panel-blur', `${pt.blur}px`);
+      rootStyle.setProperty('--panel-radius', `${pt.radius}px`);
+      
+      // Extraer RGB para el soporte de skeletons
+      const rgb = pt.bg.match(/\w\w/g).map(x => parseInt(x, 16));
+      rootStyle.setProperty('--panel-bg-rgb', rgb.join(', '));
+    } else {
+      rootStyle.setProperty('--greeting-color', settings.greetingColor || '#FFFFFF');
+      rootStyle.setProperty('--name-color', settings.nameColor || '#FFFFFF');
+      rootStyle.setProperty('--clock-color', settings.clockColor || '#FFFFFF');
+      rootStyle.setProperty('--date-color', settings.dateColor || '#FFFFFF');
+
+      // Defaults para paneles si no hay premium
+      const pBg = settings.panelBg || 'rgba(0, 0, 0, 0.2)';
+      rootStyle.setProperty('--panel-bg', pBg);
+      // Intentar extraer RGB del hex si es posible, sino default a negro
+      try {
+        const rgb = pBg.match(/\w\w/g).map(x => parseInt(x, 16));
+        rootStyle.setProperty('--panel-bg-rgb', rgb.join(', '));
+      } catch(e) {
+        rootStyle.setProperty('--panel-bg-rgb', '0, 0, 0');
+      }
+    }
 
     // --- Renderizar Reloj y Fecha (con formato) ---
     const now = new Date();

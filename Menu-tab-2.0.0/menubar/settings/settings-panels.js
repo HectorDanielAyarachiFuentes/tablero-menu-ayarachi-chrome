@@ -50,7 +50,7 @@ const PANEL_THEMES = [
     { id: 'ice', name: 'Hielo', panelBg: '#add8e6', panelOpacity: 0.1, panelBlur: 18, panelRadius: 22, panelShadowEnabled: true, panelShadowColor: '#ffffff', panelShadowBlur: 25, panelTextColor: '#0d47a1', panelTextSecondaryColor: '#1565c0' },
     { id: 'slate', name: 'Pizarra', panelBg: '#2f4f4f', panelOpacity: 0.7, panelBlur: 1, panelRadius: 6, panelShadowEnabled: true, panelShadowColor: '#000000', panelShadowBlur: 10, panelTextColor: '#f0f8ff', panelTextSecondaryColor: '#b0bec5' },
     { id: 'neon', name: 'Neón', panelBg: '#1a001a', panelOpacity: 0.1, panelBlur: 12, panelRadius: 20, panelShadowEnabled: true, panelShadowColor: '#ff00ff', panelShadowBlur: 25, panelTextColor: '#ffffff', panelTextSecondaryColor: '#f8bbd0' },
-    { id: 'transparent', name: 'Transparente', panelBg: '#000000', panelOpacity: 0, panelBlur: 0, panelRadius: 12, panelShadowEnabled: false, panelTextColor: '#dbe7ff', panelTextSecondaryColor: '#dbe7ff' }
+    { id: 'transparent', name: 'Transparente', panelBg: '#000000', panelOpacity: 0, panelBlur: 0, panelRadius: 12, panelShadowEnabled: false, panelTextColor: '#ffffff', panelTextSecondaryColor: 'rgba(255, 255, 255, 0.7)' }
 ];
 
 export function initPanelSettings() {

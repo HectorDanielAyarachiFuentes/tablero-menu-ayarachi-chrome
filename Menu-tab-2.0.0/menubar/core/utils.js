@@ -48,7 +48,8 @@ export const storageSet = (obj) => {
             syncObj[key] = obj[key];
           } else {
             hasLargeItems = true;
-            console.warn(`[Storage] El item '${key}' es demasiado grande (${(size / 1024).toFixed(2)}KB) para sincronizarse. Se guardará solo localmente.`);
+            // Silenciamos la advertencia de tamaño para no molestar al usuario, 
+            // ya que el guardado local funciona correctamente.
           }
         }
 

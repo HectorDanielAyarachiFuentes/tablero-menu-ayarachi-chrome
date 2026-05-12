@@ -17,9 +17,9 @@ import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
     
     const settings = await new Promise(resolve => chrome.storage.local.get(keys, resolve));
 
-    // 1. Si no hay configuración o está cargando, fondo negro neutro (NO AZUL)
+    // 1. Si no hay configuración, usar transparente para no parpadear
     if (!settings) {
-      document.documentElement.style.background = '#000';
+      document.documentElement.style.background = 'transparent';
       return;
     }
 
@@ -92,8 +92,8 @@ import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
         }
       }
     } else {
-      // Fallback: Negro absoluto para evitar el azul
-      document.body.style.background = '#000';
+      // Fallback neutro
+      document.body.style.backgroundColor = 'transparent';
     }
 
   } catch (error) {
