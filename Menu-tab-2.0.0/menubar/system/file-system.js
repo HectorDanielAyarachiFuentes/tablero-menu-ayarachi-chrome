@@ -1,83 +1,53 @@
 /**
- * Abstrae la interacción con el sistema de archivos local del usuario mediante la File System Access API.
- * Gestiona la selección de directorios, y la lectura/escritura de datos de la aplicación en un archivo.
+ * Abstrae la interacción con el sistema de archivos PRIVADO del navegador (OPFS).
+ * Gestiona la persistencia de datos en un archivo interno que sobrevive a limpiezas de caché.
  */
 import { storageGet, storageSet } from '../core/utils.js';
 import { STORAGE_KEYS } from '../core/config.js';
 import { showFileError, showSaveStatus, updateDataTabUI } from '../components/ui.js';
 
 const FILE_NAME = 'tablero-data.json';
-let dirHandle = null;
+let internalDirHandle = null;
 let fsWorkerInstance = null;
-
 
 /**
  * Obtiene una instancia única del Web Worker para el sistema de archivos.
- * @returns {Worker}
  */
 function getWorker() {
     if (!fsWorkerInstance) {
-        // Usamos la ruta absoluta desde la raíz de la extensión.
         fsWorkerInstance = new Worker('/menubar/system/file-worker.js', { type: 'module' });
     }
     return fsWorkerInstance;
 }
 
-/**
- * Módulo para manejar la interacción con el sistema de archivos local
- * usando la API de Acceso al Sistema de Archivos.
- */
 export const FileSystem = {
     /**
-     * Solicita al usuario que seleccione un directorio para almacenar los datos.
-     * Guarda el handle del directorio en IndexedDB para persistencia.
+     * Obtiene el acceso al directorio raíz privado (OPFS).
+     * Es automático y no requiere intervención del usuario.
      */
-    async selectDirectory(options = {}) {
-        if (!window.showDirectoryPicker) {
-            alert('Tu navegador no soporta la API de Acceso al Sistema de Archivos. Prueba con Chrome, Edge o Opera.');
-            return null;
-        }
+    async getInternalDirectory() {
+        if (internalDirHandle) return internalDirHandle;
         try {
-            // Usamos las opciones para, por ejemplo, sugerir la carpeta anterior.
-            // Esto mejora la experiencia al renovar permisos.
-            const handle = await window.showDirectoryPicker(options);
-            await set('dirHandle', handle);
-            dirHandle = handle;
-            console.log('Directorio seleccionado y guardado:', handle.name);
-
-            // Realizar un guardado inicial en el hilo principal para asegurar la creación del archivo.
-            // Esto es crucial porque la acción del usuario (el click) garantiza el permiso.
-            // Las operaciones posteriores pueden ser delegadas al worker de forma segura.
-            const fileHandle = await handle.getFileHandle(FILE_NAME, { create: true });
-            const writable = await fileHandle.createWritable();
-            await writable.write(JSON.stringify({}, null, 2)); // Escribir un objeto vacío inicial
-            await writable.close();
-            console.log('Archivo de datos inicial creado en el hilo principal.');
-
-            showSaveStatus();
-            return handle;
+            internalDirHandle = await navigator.storage.getDirectory();
+            return internalDirHandle;
         } catch (err) {
-            if (err.name !== 'AbortError') {
-                console.error('Error al seleccionar el directorio:', err);
-            }
+            console.error('Error al acceder al OPFS:', err);
             return null;
         }
     },
 
     /**
-     * Carga los datos desde el archivo local si existe un handle y permisos.
-     * @returns {object|null} Los datos cargados o null si no se pudo cargar.
+     * Carga los datos desde el archivo interno del navegador.
      */
     async loadDataFromFile() {
         return new Promise(async (resolve) => {
-            const handle = await this.getDirectoryHandle();
+            const handle = await this.getInternalDirectory();
             if (!handle) return resolve(null);
             
             const fsWorker = getWorker();
             fsWorker.onmessage = (event) => {
                 if (event.data.action === 'loadDataResult') {
                     if (event.data.success && event.data.data) {
-                        // El worker nos devuelve los datos, ahora los guardamos en IndexedDB
                         storageSet(event.data.data).then(() => resolve(event.data.data));
                     } else {
                         resolve(null);
@@ -89,46 +59,31 @@ export const FileSystem = {
     },
 
     /**
-     * Guarda el estado actual de la aplicación en el archivo local.
-     * @param {object} dataToSave - Los datos a guardar (tiles, trash, etc.).
+     * Guarda el estado actual en el archivo interno (OPFS).
      */
     async saveDataToFile(dataToSave) {
-        // Obtenemos TODAS las configuraciones guardadas en el navegador.
-        // Usar `null` en storageGet devuelve todos los items.
         const allSettings = await storageGet(null);
-
-        // Creamos el objeto de datos completo para guardar.
-        // Esto asegura que cualquier cambio, sin importar dónde se originó,
-        // se incluya en el archivo de respaldo.
         const fullData = { ...allSettings };
 
-        // Excluimos los datos del clima para no guardarlos en el archivo, solo la ciudad.
+        // Limpieza de datos temporales
         delete fullData.weather;
-        // Excluimos el handle del directorio para no guardarlo dentro del propio archivo.
         delete fullData.dirHandle;
 
         return new Promise(async (resolve, reject) => {
-            // ¡CAMBIO CLAVE!
-            // Para una operación de guardado (escritura), siempre verificamos el permiso
-            // ANTES de enviar la tarea al worker. Como es una operación en segundo plano,
-            // no podemos solicitar el permiso aquí (withPermissionRequest = false).
-            // Si no tenemos permiso, simplemente rechazamos la promesa para que el
-            // guardado automático falle de forma controlada y muestre el error en la UI.
-            const handle = await this.getDirectoryHandle(false);
+            const handle = await this.getInternalDirectory();
 
             if (!handle) {
-                // Si no tenemos handle (porque el permiso es 'prompt' o 'denied'),
-                // rechazamos la promesa para que la lógica de reintentos en utils.js sepa que falló.
-                return reject(new Error('Permiso de archivo no concedido para guardado automático.'));
+                return reject(new Error('No se pudo acceder al almacenamiento interno del navegador.'));
             }
             
             const fsWorker = getWorker();
             fsWorker.onmessage = (event) => {
                 if (event.data.action === 'saveDataResult') { 
                     if (event.data.success) {
+                        console.log('[FileSystem] Sincronización interna completada.');
                         resolve();
                     } else {
-                        showFileError(`Error al guardar: ${event.data.error}`);
+                        showFileError(`Error de sincronización interna: ${event.data.error}`);
                         reject(new Error(event.data.error));
                     }
                 }
@@ -138,69 +93,17 @@ export const FileSystem = {
     },
 
     /**
-     * Obtiene el handle del directorio desde la caché o IndexedDB.
-     * Verifica los permisos antes de devolverlo.
-     * @param {boolean} withPermissionRequest - Si es `true`, intentará solicitar el permiso si es necesario (debe ser por acción del usuario).
-     * @returns {FileSystemDirectoryHandle|null}
+     * Mantiene compatibilidad con la UI vieja pero ahora informa que es automático.
      */
-    async getDirectoryHandle(withPermissionRequest = false) {
-        if (dirHandle) return dirHandle;
-        
-        const handleFromDB = await get('dirHandle');
-        if (!handleFromDB) return null;
-
-        // Pasamos el flag para que verifyPermission sepa si puede o no pedir permiso.
-        if (await verifyPermission(handleFromDB, withPermissionRequest)) {
-            dirHandle = handleFromDB;
-            return dirHandle;
-        }
-        return null;
+    async getPermissionState() {
+        return 'granted';
     },
 
     /**
-     * Consulta el estado actual del permiso para el handle del directorio guardado.
-     * No solicita permiso, solo informa.
-     * @returns {Promise<PermissionState|null>} 'granted', 'prompt', 'denied', o null si no hay handle.
+     * Selector de directorio ya no es necesario para OPFS.
      */
-    async getPermissionState() {
-        const handleFromDB = await get('dirHandle');
-        if (!handleFromDB) {
-            return null;
-        }
-        const options = { mode: 'readwrite' };
-        return await handleFromDB.queryPermission(options);
+    async selectDirectory() {
+        console.log('OPFS activo: El guardado ya es automático e interno.');
+        return await this.getInternalDirectory();
     }
 };
-
-// --- IndexedDB Helpers para guardar el handle ---
-import { get, set } from '/menubar/lib/idb-keyval.js';
-
-/**
- * Verifica y, si es necesario, solicita permiso para un handle de archivo/directorio.
- * @param {FileSystemHandle} fileHandle - El handle a verificar.
- * @param {boolean} withRequest - Si es `true`, intentará solicitar el permiso si el estado es 'prompt'.
- * @returns {Promise<boolean>} - `true` si se tiene permiso, `false` en caso contrario.
- */
-async function verifyPermission(fileHandle, withRequest = false) {
-    const options = { mode: 'readwrite' };
-
-    // Primero, consulta el estado del permiso sin molestar al usuario.
-    if (await fileHandle.queryPermission(options) === 'granted') {
-        return true;
-    }
-
-    // Si se nos permite (porque la acción fue iniciada por el usuario), solicitamos el permiso.
-    if (withRequest && await fileHandle.requestPermission(options) === 'granted') {
-        return true;
-    }
-
-    // Si llegamos aquí, es porque el permiso es 'prompt' (y no se solicitó) o 'denied'.
-    if (await fileHandle.queryPermission(options) === 'prompt') {
-        console.log('File system permission status is "prompt". The user must re-select the directory via a user action to re-grant permission.');
-        // En lugar de mostrar un error global, simplemente actualizamos la UI de la pestaña de datos,
-        // que ahora tiene su propio manejador de errores visual.
-        // Esto hace que el error aparezca en el contexto correcto.
-        updateDataTabUI();
-    }
-    return false;
-}

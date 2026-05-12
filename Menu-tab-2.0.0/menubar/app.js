@@ -6,7 +6,7 @@
 import { $, storageGet, storageSet } from './core/utils.js';
 import { STORAGE_KEYS } from './core/config.js';
 
-import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateDataTabUI, toggleSettings, switchToTab, showPermissionWarningBanner } from './components/ui.js';
+import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateDataTabUI, toggleSettings, switchToTab } from './components/ui.js';
 import { updateSliderValueSpans, updatePanelRgb } from './settings/settings-panels.js';
 import { initTiles, renderTiles, tiles, setTiles, setTrash } from './core/tiles.js';
 import { renderNotes } from './components/notes.js';
@@ -40,7 +40,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 async function init() {
   // 1. Carga inicial desde la caché local (muy rápido)
-  // Primero, intenta cargar desde el archivo local si existe el handle.
+  // Primero, intenta cargar desde el archivo local (OPFS es automático ahora).
   let settings = await FileSystem.loadDataFromFile();
   let loadedFromFile = !!settings;
 
@@ -65,8 +65,6 @@ async function init() {
     const syncedSettings = await storageGet(STORAGE_KEYS, false);
     await applySettings(syncedSettings, true);
   }
-
-  checkPermissionsOnLoad();
 }
 
 async function applySettings(settings, isUpdate = false) {
@@ -262,31 +260,12 @@ export async function updateBackground() {
       }
     } else {
       // Asegurar que si hay tema premium, no queden residuos de estilos inline en body que puedan interferir
-      // Opcionalmente, aquí podríamos llamar a alguna función de re-aplicar el tema si fuera necesario,
-      // pero themes-premium.js ya se encarga de eso en la inicialización.
-      // Lo importante es NO Sobrescribirlo con un degradado por defecto.
     }
   }
 
   // Actualizar siempre la UI de la configuración
   updateActiveGradientButton(settings.gradient);
   updateDoodleSelectionUI(doodleId);
-}
-
-/**
- * Verifica los permisos del sistema de archivos al cargar la aplicación.
- * Si el permiso se ha perdido (estado 'prompt'), muestra un banner de advertencia.
- */
-async function checkPermissionsOnLoad() {
-  const { hideWarning } = await storageGet(['hideWarning']);
-  if (hideWarning) return; // El usuario no quiere ver el aviso.
-
-  const permissionStatus = await FileSystem.getPermissionState();
-  // Si el permiso está en 'prompt', significa que se perdió y debe ser re-otorgado.
-  if (permissionStatus === 'prompt') {
-    console.log('Permiso de archivo perdido. Mostrando banner de advertencia.');
-    showPermissionWarningBanner(true);
-  }
 }
 
 init();

@@ -17,7 +17,8 @@
   "permissions": [
     "storage",
     "geolocation",
-    "bookmarks"
+    "bookmarks",
+    "unlimitedStorage"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: https://* blob:;"

@@ -78,10 +78,8 @@ async function saveDataToFile(handle, dataToSave) {
 
     try {
         await withRetries(async () => {
-            // Cambiamos 'create: true' a 'create: false'.
-            // El archivo ahora SIEMPRE debe ser creado por el hilo principal en `selectDirectory`.
-            // El worker solo debe leerlo y escribir sobre él, no crearlo desde cero.
-            const fileHandle = await handle.getFileHandle(FILE_NAME, { create: false });
+            // Cambiamos 'create' a 'true' para que se cree automáticamente en el OPFS.
+            const fileHandle = await handle.getFileHandle(FILE_NAME, { create: true });
             const writable = await fileHandle.createWritable();
             // El objeto dataToSave ya viene completo desde el hilo principal.
             await writable.write(JSON.stringify(dataToSave, null, 2));

@@ -137,32 +137,8 @@ export function initSettings(initialState) {
     });
 
     // --- Nueva lógica para la pestaña de Datos ---
-    $('#selectDirBtn').addEventListener('click', async () => {
-        let options = {
-            id: 'tablero-data-directory', // Un ID para que el navegador recuerde la última ubicación
-            mode: 'readwrite'
-        };
-        // Comprobamos si estamos renovando un permiso perdido.
-        const permissionState = await FileSystem.getPermissionState();
-        if (permissionState === 'prompt') {
-            // Si es así, obtenemos el handle anterior para sugerirlo al selector de carpetas.
-            // Esto hace que el navegador pregunte directamente por esa carpeta en lugar de abrir el explorador.
-            const previousHandle = await FileSystem.getDirectoryHandle(false);
-            // ¡CORRECCIÓN! Solo asignamos startIn si el handle es válido.
-            if (previousHandle) {
-                options.startIn = previousHandle;
-            }
-        }
-        const handle = await FileSystem.selectDirectory(options);
-        updateDataTabUI();
-        // MEJORA: Si se seleccionó un directorio, ocultamos el mensaje de error y mostramos "Guardado!".
-        if (handle) {
-            showSaveStatus(); // Esto reemplazará el mensaje de error.
-        }
-        // Disparamos un evento personalizado para notificar que la selección ha terminado.
-        const event = new CustomEvent('directorySelected');
-        $('#selectDirBtn').dispatchEvent(event);
-    });
+    // El sistema de archivos ahora es interno y automático (OPFS)
+    updateDataTabUI();
 
     $('#autoSyncToggle').checked = initialState.autoSync || false;
     $('#autoSyncToggle').addEventListener('change', (e) => {
@@ -170,26 +146,6 @@ export function initSettings(initialState) {
             showSaveStatus();
             updateDataTabUI();
         });
-    });
-
-    $('#hideWarningToggle').checked = initialState.hideWarning || false;
-    $('#hideWarningToggle').addEventListener('change', (e) => {
-        storageSet({ hideWarning: e.target.checked }).then(showSaveStatus);
-    });
-
-    // Listener para el botón de re-seleccionar carpeta en el mensaje de error.
-    // Se añade al cuerpo de la configuración para usar delegación de eventos.
-    $('.settings-body').addEventListener('click', async (e) => {
-        if (e.target.id === 'reselectDirFromError') {
-            // Simulamos un clic en el botón principal para que el usuario pueda re-seleccionar la carpeta.
-            // Usamos una promesa para saber cuándo termina la selección.
-            const dirSelectedPromise = new Promise(resolve => {
-                const btn = $('#selectDirBtn');
-                btn.addEventListener('directorySelected', resolve, { once: true });
-                btn.click();
-            });
-            await dirSelectedPromise;
-        }
     });
 
     updateDataTabUI();

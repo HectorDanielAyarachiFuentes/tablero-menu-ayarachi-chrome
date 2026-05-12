@@ -2232,3 +2232,52 @@ input[type=range]::-moz-range-thumb {
   border: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
+
+/* --- Estilos para la pestaña de Datos (OPFS) --- */
+.dir-path {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--panel-text-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dir-path::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #2ecc71;
+    display: inline-block;
+}
+
+.dir-path b {
+    color: #2ecc71;
+    font-weight: 600;
+}
+
+.data-section {
+    margin-bottom: 30px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.data-section h4 {
+    margin: 0 0 14px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--panel-text-color);
+    opacity: 0.9;
+}
+
+.data-status-container {
+    margin-bottom: 10px;
+}

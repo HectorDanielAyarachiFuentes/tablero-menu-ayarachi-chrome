@@ -60,11 +60,7 @@ export function initUI() {
         }
     });
 
-    // Listener para el botón en el banner de advertencia
-    $('#renewPermissionBtn').addEventListener('click', () => {
-        toggleSettings(true);
-        switchToTab('datos');
-    });
+
 }
 
 /**
@@ -189,20 +185,7 @@ export function toggleNotesPanel(show) {
     updateMainBlur();
 }
 
-/**
- * Muestra u oculta el banner de advertencia de permisos.
- * @param {boolean} show - True para mostrar, false para ocultar.
- */
-export function showPermissionWarningBanner(show) {
-    const banner = $('#permission-banner');
-    if (show) {
-        banner.hidden = false;
-        banner.classList.add('visible');
-    } else {
-        banner.classList.remove('visible');
-        banner.hidden = true;
-    }
-}
+
 
 function updateMainBlur() {
     $('.main').classList.toggle('blurred', !!($('#settings[aria-hidden="false"]') || $('#notes-panel[aria-hidden="false"]')));
@@ -266,61 +249,22 @@ export function showFileError(message, isPermissionError = false) {
     saveStatus.style.opacity = '1';
 }
 export async function updateDataTabUI() {
-    const dataStatusEl = $('#data-status');
-    const handle = await FileSystem.getDirectoryHandle(false); // No solicitar permiso, solo consultar
-    const permissionState = await FileSystem.getPermissionState();
-    const { autoSync, hideWarning } = await storageGet(['autoSync', 'hideWarning']);
+    const { autoSync } = await storageGet(['autoSync']);
     const dirPathEl = $('#dirPath');
-    const selectDirBtn = $('#selectDirBtn');
 
-    // Ocultar el contenedor de estado por defecto
-    dataStatusEl.classList.remove('visible', 'error');
-
-    if (handle) {
-        dirPathEl.hidden = false;
-        dirPathEl.classList.remove('warning');
-        selectDirBtn.textContent = 'Cambiar Carpeta';
-
-        if (permissionState === 'prompt') {
-            showDataTabError('Permiso de acceso a carpeta denegado.', true);
-            selectDirBtn.textContent = 'Renovar Permiso';
-            if (!hideWarning) {
-                showPermissionWarningBanner(true); // Asegurarse de que el banner se muestre si no está desactivado
-            }
-        } else {
-            dirPathEl.innerHTML = `<span>Carpeta activa: <b>${handle.name}</b></span>`;
-            showPermissionWarningBanner(false); // Ocultar el banner si el permiso está bien
-        }
-
-        $('#autoSyncToggle').disabled = false;
-        $('#autoSyncToggle').checked = autoSync || false;
-        $('#manualSaveBtn').hidden = autoSync || false;
-    } else {
-        dirPathEl.hidden = true;
-        selectDirBtn.textContent = 'Elegir Carpeta de Datos';
-        $('#autoSyncToggle').disabled = true;
-        $('#autoSyncToggle').checked = false;
-        $('#manualSaveBtn').hidden = true;
-    }
-    $('#hideWarningToggle').checked = hideWarning || false;
-}
-
-/**
- * Muestra un mensaje de error dentro de la pestaña de Datos.
- * @param {string} message - El mensaje de error a mostrar.
- * @param {boolean} isPermissionError - Si es true, añade un botón para re-seleccionar el directorio.
- */
-function showDataTabError(message, isPermissionError = false) {
-    const dataStatusEl = $('#data-status');
-    if (!dataStatusEl) return;
-
-    let finalMessage = message;
-    if (isPermissionError) {
-        finalMessage = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        <span>${message}</span>
-        <button id="reselectDirFromError" class="btn-link" style="text-decoration: underline; background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: inherit; margin-left: auto;">Re-seleccionar</button>`;
+    if (dirPathEl) {
+        dirPathEl.innerHTML = `<span>Estado: <b>Sincronización Activa</b></span>`;
     }
 
-    dataStatusEl.innerHTML = finalMessage;
-    dataStatusEl.classList.add('visible', 'error');
+    const autoSyncToggle = $('#autoSyncToggle');
+    if (autoSyncToggle) {
+        autoSyncToggle.disabled = false;
+        autoSyncToggle.checked = autoSync || false;
+    }
+
+    const manualSaveBtn = $('#manualSaveBtn');
+    if (manualSaveBtn) {
+        manualSaveBtn.hidden = autoSync || false;
+    }
 }
+

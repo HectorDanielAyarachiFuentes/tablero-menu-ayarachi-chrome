@@ -25,20 +25,44 @@ export const storageGet = (keys, useCache = false) => new Promise(resolve => {
 });
 
 // CAMBIO: La función de guardado ahora escribe en `local` (para velocidad) y `sync` (para sincronización)
+// Se añade un filtro de tamaño para evitar el error "kQuotaBytesPerItem quota exceeded"
 export const storageSet = (obj) => {
   return new Promise(async (resolve) => {
     if (window.chrome && chrome.storage) {
-      // Guardamos en local para acceso rápido e inmediato. Esperamos a que termine.
+      // 1. Guardamos SIEMPRE en local para acceso rápido e inmediato.
+      // Local no tiene los límites tan estrictos de sync.
       await new Promise(res => chrome.storage.local.set(obj, res));
 
-      // También guardamos en sync para la sincronización entre dispositivos.
-      // No necesitamos esperar (await) a que termine para no bloquear la UI.
+      // 2. Intentamos guardar en sync para la sincronización entre dispositivos.
       if (chrome.storage.sync) {
-        chrome.storage.sync.set(obj);
+        const syncObj = {};
+        let hasLargeItems = false;
+
+        for (const key in obj) {
+          // Calculamos el tamaño aproximado en bytes
+          const size = JSON.stringify(obj[key]).length;
+          
+          // El límite de Chrome Sync es ~8KB (8192 bytes) por item.
+          // Si el item es más pequeño que 7KB, lo incluimos en la sincronización.
+          if (size < 7000) {
+            syncObj[key] = obj[key];
+          } else {
+            hasLargeItems = true;
+            console.warn(`[Storage] El item '${key}' es demasiado grande (${(size / 1024).toFixed(2)}KB) para sincronizarse. Se guardará solo localmente.`);
+          }
+        }
+
+        if (Object.keys(syncObj).length > 0) {
+          chrome.storage.sync.set(syncObj, () => {
+            if (chrome.runtime.lastError) {
+              console.error("Error en chrome.storage.sync:", chrome.runtime.lastError.message);
+            }
+          });
+        }
       }
       resolve();
     } else {
-      // Fallback para cuando no es una extensión
+      // Fallback para cuando no es una extensión (localStorage)
       Object.keys(obj).forEach(k => localStorage.setItem(k, JSON.stringify(obj[k])));
       resolve();
     }
