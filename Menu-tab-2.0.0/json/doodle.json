@@ -1,72 +1,67 @@
-﻿[
+[
   {
     "id": "none",
     "name": "Ninguno",
     "template": ""
   },
   {
+    "id": "aura-boreal",
+    "name": "Aura Boreal (Premium)",
+    "template": ":doodle {\n  @grid: 1 / 100vw 100vh;\n  background: #02040a;\n  overflow: hidden;\n}\nbackground: \n  radial-gradient(circle at @r(0%, 100%) @r(0%, 100%), @p(#00d2ff, #3a7bd5, #6a11cb, #2575fc, #ff00cc) 0%, transparent @r(40%, 80%)),\n  radial-gradient(circle at @r(0%, 100%) @r(0%, 100%), @p(#00f2fe, #4facfe, #43e97b, #fa709a) 0%, transparent @r(30%, 70%));\nfilter: blur(@r(60px, 100px));\nopacity: @r(0.3, 0.6);\nanimation: aura-move @r(20s, 45s) linear infinite alternate;\n@keyframes aura-move {\n  0% { transform: translate(-15%, -15%) scale(1.2) rotate(0deg); }\n  100% { transform: translate(15%, 15%) scale(1.6) rotate(20deg); }\n}"
+  },
+  {
+    "id": "cristales-esmerilados",
+    "name": "Cristales Flotantes",
+    "template": ":doodle {\n  @grid: 12 / 100vw 100vh;\n}\n@size: @r(80px, 250px);\nbackground: rgba(255, 255, 255, @r(0.02, 0.08));\nbackdrop-filter: blur(@r(2px, 12px));\nborder: 1px solid rgba(255, 255, 255, 0.1);\nborder-radius: @r(10px, 50px);\nposition: absolute;\nleft: @r(-10%, 110%);\ntop: @r(-10%, 110%);\ntransform: rotate(@r(360deg)) scale(@r(0.5, 1.2));\nanimation: drift @r(15s, 40s) linear infinite;\n@keyframes drift {\n  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }\n  20% { opacity: 0.8; }\n  80% { opacity: 0.8; }\n  100% { transform: translate(@r(-300px, 300px), @r(-300px, 300px)) rotate(@r(180deg, 360deg)); opacity: 0; }\n}"
+  },
+  {
     "id": "lluvia-estrellas",
-    "name": "Meteoros Minimalistas",
-    "template": ":doodle {\n        @grid: 1x15 / 100vw 100vh;\n      }\n\n      @size: @r(2px, 4px) @r(80px, 200px);\n      background: linear-gradient(135deg,\n        hsla(0, 0%, 100%, @r(.7, 1)),\n        hsla(0, 0%, 100%, 0)\n      );\n      border-radius: 50%;\n      filter: drop-shadow(0 0 8px #fff);\n      position: absolute;\n      left: @r(110%, 120%);\n      top: @r(-20vh, 80vh);\n      animation: fall @r(12s, 25s) ease-in infinite;\n      animation-delay: -@r(25s);\n\n      @keyframes fall {\n        to { \n          transform: translate(-130vw, 110vh);\n          opacity: 0;\n        }\n      }"
+    "name": "Lluvia de Estrellas",
+    "template": ":doodle {\n  @grid: 1x25 / 100vw 100vh;\n}\n@size: @r(2px, 4px) @r(100px, 300px);\nbackground: linear-gradient(180deg, hsla(0, 0%, 100%, @r(0.7, 1)), transparent);\nborder-radius: 50%;\nfilter: drop-shadow(0 0 8px #fff);\nposition: absolute;\nleft: @r(0%, 100%);\ntop: -40vh;\ntransform: rotate(155deg);\nanimation: fall @r(4s, 12s) linear infinite;\nanimation-delay: -@r(12s);\n@keyframes fall {\n  from { transform: translateY(0) rotate(155deg); opacity: 1; }\n  to { transform: translateY(140vh) rotate(155deg); opacity: 0; }\n}"
   },
   {
     "id": "circulos-transicion",
-    "name": "Burbujas Flotantes",
-    "template": ":doodle {\n        @grid: 10 / 95%;\n        @shape: circle;\n      }\n      background: hsla(\n        calc(240 - 6 * @x * @y),\n        70%, 68%, @r(.6, .8)\n      );\n      backdrop-filter: blur(2px);\n      transform: scale(@r(.3, 1));\n      animation: breathe @r(4s, 8s) ease-in-out infinite;\n      animation-delay: -@r(8s);\n\n      @keyframes breathe {\n        0%, 100% { transform: scale(@r(.3, .6)); opacity: @r(.5, .7); }\n        50% { transform: scale(@r(.8, 1.2)); opacity: @r(.7, .9); }\n      }"
+    "name": "Burbujas de Cristal",
+    "template": ":doodle {\n  @grid: 10 / 100%;\n  @shape: circle;\n}\nbackground: hsla(calc(240 - 6 * @x * @y), 70%, 68%, @r(0.2, 0.5));\nbackdrop-filter: blur(@r(2px, 5px));\nborder: 1px solid rgba(255, 255, 255, 0.1);\ntransform: scale(@r(0.3, 1));\nanimation: breathe @r(5s, 10s) ease-in-out infinite alternate;\n@keyframes breathe {\n  0% { transform: scale(@r(0.3, 0.5)) translate(@r(-20px, 20px), @r(-20px, 20px)); opacity: 0.3; }\n  100% { transform: scale(@r(0.8, 1.2)) translate(@r(-10px, 10px), @r(-10px, 10px)); opacity: 0.7; }\n}"
   },
   {
     "id": "lineas-neon",
-    "name": "Grid Minimalista",
-    "template": ":doodle {\n        @grid: 20 / 100vmax;\n      }\n      @random(.5) {\n        border-left: 1px solid #5d81bc;\n      }\n      @random(.5) {\n        border-top: 1px solid #5d81bc;\n      }\n      @random(.15) {\n        background: linear-gradient(\n          @p(#fff, tan, #5d81bc), @lp\n        )\n        50% / @r(60%) @lr\n        no-repeat;\n      }\n      transition: all 0.3s ease;\n      \n      :hover {\n        filter: drop-shadow(0 0 10px #fff);\n      }"
+    "name": "Grid Neón",
+    "template": ":doodle {\n  @grid: 18 / 100vmax;\n}\nborder-left: 1px solid hsla(@r(200, 260), 70%, 60%, @r(0.1, 0.3));\nborder-top: 1px solid hsla(@r(200, 260), 70%, 60%, @r(0.1, 0.3));\n@random(.15) {\n  background: linear-gradient(hsla(@r(360), 80%, 70%, 0.5), transparent);\n  box-shadow: 0 0 15px hsla(@lr, 80%, 70%, 0.3);\n}\ntransition: all 0.4s ease;\n:hover { background: rgba(255, 255, 255, 0.1); filter: brightness(1.5); }"
   },
   {
     "id": "trazos-svg",
     "name": "Constelaciones",
-    "template": ":doodle {\n        @grid: 1 / 100vw 100vh;\n        background: radial-gradient(ellipse at center, #0a0e27 0%, #020515 100%);\n      }\n      @content: @svg(\n        viewBox: 0 0 100 100;\n        stroke: #aeacfb;\n        stroke-width: .03;\n        stroke-linecap: round;\n        fill: #fff;\n        line*200 {\n          draw: @r(4s, 8s);\n          opacity: @r(.2, .6);\n          x1: @r(100); y1: @r(100);\n          x2: @calc(@x1 + @r(-15, 15));\n          y2: @calc(@y1 + @r(-15, 15));\n        }\n        circle*150 {\n          r: @r(.08, .25);\n          cx: @r(100);\n          cy: @r(100);\n          fill: @p(#fff, #aeacfb, #a8dadc);\n          opacity: @r(.4, 1);\n          animation: twinkle @r(2s, 5s) ease-in-out infinite;\n          animation-delay: -@r(5s);\n        }\n      );\n      \n      @keyframes twinkle {\n        0%, 100% { opacity: @r(.3, .6); }\n        50% { opacity: @r(.8, 1); }\n      }"
+    "template": ":doodle {\n  @grid: 1 / 100vw 100vh;\n  background: #05070a;\n}\n@content: @svg(\n  viewBox: 0 0 100 100;\n  stroke: #aeacfb;\n  stroke-width: .05;\n  line*150 {\n    draw: @r(5s, 10s);\n    opacity: @r(0.1, 0.4);\n    x1: @r(100); y1: @r(100);\n    x2: @calc(@x1 + @r(-15, 15));\n    y2: @calc(@y1 + @r(-15, 15));\n  }\n  circle*100 {\n    r: @r(0.1, 0.3);\n    cx: @r(100); cy: @r(100);\n    fill: @p(#fff, #aeacfb);\n    animation: twinkle @r(2s, 5s) ease-in-out infinite alternate;\n  }\n);\n@keyframes twinkle { 0% { opacity: 0.2; } 100% { opacity: 1; transform: scale(1.5); } }"
   },
   {
     "id": "flor-radial",
-    "name": "Onda Radial",
-    "template": ":doodle {\n        @grid: 1 / 100vw 100vh;\n        position: absolute;\n        top: 0;\n        left: 0;\n      }\n      \n      @place: center;\n      @size: 120vmin;\n      background: radial-gradient(\n        circle,\n        hsla(330, 100%, 70%, 0.8),\n        hsla(50, 100%, 60%, 0.6),\n        hsla(0, 100%, 50%, 0.4),\n        transparent\n      );\n      mask: @svg-polygon(\n        split: 400;\n        scale: 1;\n        r: cos(7t)^4 + sin(7t) + .5;\n      );\n      animation: rotate 25s linear infinite, pulse 4s ease-in-out infinite;\n      \n      @keyframes rotate {\n        to { transform: rotate(360deg); }\n      }\n      \n      @keyframes pulse {\n        0%, 100% { transform: scale(0.95); opacity: 0.7; }\n        50% { transform: scale(1.05); opacity: 1; }\n      }"
+    "name": "Onda Psicodélica",
+    "template": ":doodle {\n  @grid: 1 / 100vw 100vh;\n}\n@place: center;\n@size: 110vmin;\nbackground: radial-gradient(circle, hsla(@r(360), 100%, 70%, 0.6), hsla(@lr, 100%, 50%, 0.4), transparent 70%);\nmask: @svg-polygon(split: 500; r: cos(6t)^3 + sin(6t) + 0.5;);\nanimation: rotate-pulse 30s linear infinite;\n@keyframes rotate-pulse {\n  0% { transform: rotate(0) scale(0.9); opacity: 0.5; }\n  50% { transform: rotate(180deg) scale(1.1); opacity: 0.8; }\n  100% { transform: rotate(360deg) scale(0.9); opacity: 0.5; }\n}"
   },
   {
     "id": "mosaico-cajas",
-    "name": "Píxeles Flotantes",
-    "template": "<style>\n        :doodle {\n          @grid: 12 / 100vw 100vh;\n          gap: 2px;\n        }\n        @size: @r(20px, 60px);\n        background: hsl(@r(240), 30%, 50%);\n        border-radius: 4px;\n        position: absolute;\n        left: @r(100%);\n        top: @r(100%);\n        animation: fadeInOut @r(3s, 6s) ease-in-out infinite;\n        animation-delay: -@r(6s);\n        \n        @keyframes fadeInOut {\n          0%, 100% { opacity: 0.3; transform: scale(0.8); }\n          50% { opacity: 0.8; transform: scale(1); }\n        }\n      </style>"
+    "name": "Píxeles Modernos",
+    "template": ":doodle {\n  @grid: 15 / 100vw 100vh;\n  gap: 4px;\n}\n@size: @r(30px, 80px);\nbackground: hsla(@r(200, 280), 50%, 50%, @r(0.1, 0.4));\nborder-radius: 4px;\nposition: absolute;\nleft: @r(100%); top: @r(100%);\nanimation: pixel-float @r(5s, 15s) ease-in-out infinite;\n@keyframes pixel-float {\n  0%, 100% { transform: translate(0, 0) rotate(0); opacity: 0.2; }\n  50% { transform: translate(@r(-40px, 40px), @r(-40px, 40px)) rotate(@r(90deg)); opacity: 0.6; }\n}"
   },
   {
     "id": "caracteres-aleatorios",
-    "name": "Tipografía Dinámica",
-    "template": "<style>\n        :doodle {\n          @grid: 15 / 100vmax;\n        }\n        :after {\n          content: @p('◯', '△', '□', '◇', '○', '▽', '◁', '▷');\n          color: hsla(@r(360), 70%, 70%, @r(.6, .9));\n          position: absolute;\n          font-size: @r(3cqmax, 7cqmax);\n          font-family: sans-serif;\n          font-weight: 300;\n          animation: drift @r(8s, 15s) ease-in-out infinite;\n          animation-delay: -@r(15s);\n        }\n        \n        @keyframes drift {\n          0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }\n          50% { transform: translateY(-20px) rotate(180deg); opacity: 0.9; }\n        }\n      </style>"
+    "name": "Abstracto Geométrico",
+    "template": ":doodle {\n  @grid: 12 / 100vmax;\n}\n:after {\n  content: @p('△', '□', '◇', '○', '▽');\n  color: hsla(@r(360), 70%, 70%, @r(0.3, 0.6));\n  font-size: @r(2rem, 5rem);\n  animation: drift @r(10s, 20s) linear infinite;\n}\n@keyframes drift {\n  from { transform: rotate(0) translateY(0); }\n  to { transform: rotate(360deg) translateY(-100px); }\n}"
   },
   {
     "id": "galaxia-espiral",
-    "name": "Espiral Minimalista",
-    "template": ":doodle {\n        @grid: 1 / 100vw 100vh;\n        background: radial-gradient(ellipse at center, #1a4d8f 0%, #0a1929 100%);\n      }\n      \n      @content: @svg(\n        viewBox: -50 -50 100 100;\n        circle*400 {\n          fill: hsl(@calc(180 + 60*@sin.n), @r(70%, 90%), @r(50%, 70%));\n          r: @calc(@sqrt(@n/15));\n          cx: @calc(@n*.618^4 * @cos(2*3.14159*@n*.618));\n          cy: @calc(@n*.618^4 * @sin(2*3.14159*@n*.618));\n          opacity: @r(.5, .9);\n        }\n      );"
-  },
-  {
-    "id": "lineas-aleatorias-svg",
-    "name": "Trazos Artísticos",
-    "template": "<style>\n        :doodle {\n          @grid: 1 / 100vw 100vh;\n          background-size: 100%;\n          background-image: @svg(\n            <svg viewBox=\"0 0 100 175\">\n              @M40(<path\n                stroke-width=\"@r(.3, .8)\"\n                stroke=\"@p(#60569e, #e6437d, #ff7e5f)\"\n                fill=\"none\"\n                stroke-linecap=\"round\"\n                d=\"M @r(100) @r(175) Q @r(100) @r(175) @r(100) @r(175)\"\n              />)\n            </svg>\n          );\n        }\n      </style>"
+    "name": "Galaxia Minimal",
+    "template": ":doodle {\n  @grid: 1 / 100vw 100vh;\n  background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);\n}\n@content: @svg(\n  viewBox: -50 -50 100 100;\n  circle*450 {\n    fill: hsla(@calc(200 + 40*@sin.n), 80%, 70%, @r(0.4, 0.9));\n    r: @calc(@sqrt(@n/12));\n    cx: @calc(@n*.618^4 * @cos(2*3.14*@n*.618));\n    cy: @calc(@n*.618^4 * @sin(2*3.14*@n*.618));\n  }\n);"
   },
   {
     "id": "mosaico-anidado",
-    "name": "Geometría Moderna",
-    "template": ":doodle {\n        @grid: 8x6 / 100vw 100vh;\n        gap: @r(8px, 16px);\n      }\n      \n      @size: @r(80px, 180px);\n      background: linear-gradient(\n        @r(360deg),\n        hsla(250, 60%, 55%, 0.9),\n        hsla(280, 50%, 45%, 0.7)\n      );\n      border-radius: @r(4px, 12px);\n      box-shadow: \n        0 @r(4px, 8px) @r(16px, 32px) rgba(96, 86, 158, 0.3),\n        inset 0 1px 0 rgba(255, 255, 255, 0.1);\n      transform: \n        perspective(1000px)\n        rotateX(@r(-15deg, 15deg))\n        rotateY(@r(-15deg, 15deg))\n        translateZ(@r(-50px, 50px));\n      animation: float3d @r(6s, 12s) ease-in-out infinite;\n      animation-delay: -@r(12s);\n      \n      background-image: @doodle(\n        @grid: @p(2, 3) / 100%;\n        gap: 3px;\n        background: linear-gradient(\n          @r(360deg),\n          hsla(260, 50%, 65%, 0.8),\n          hsla(240, 60%, 55%, 0.6)\n        );\n        border-radius: 2px;\n      );\n      \n      @keyframes float3d {\n        0%, 100% { \n          transform: \n            perspective(1000px)\n            rotateX(@r(-10deg, 10deg))\n            rotateY(@r(-10deg, 10deg))\n            translateZ(0px)\n            translateY(0);\n        }\n        50% { \n          transform: \n            perspective(1000px)\n            rotateX(@r(-20deg, 20deg))\n            rotateY(@r(-20deg, 20deg))\n            translateZ(@r(30px, 80px))\n            translateY(@r(-30px, 30px));\n        }\n      }"
-  },
-  {
-    "id": "barras-aleatorias",
-    "name": "Visualizador Minimalista",
-    "template": ":doodle {\n        @grid: 1x40;\n        @size: 100vw 100vh;\n        gap: 2px;\n        display: flex;\n        flex-direction: column;\n        justify-content: center;\n      }\n      background: #60569e;\n      border-radius: 2px;\n      width: @rand(10%, 100%);\n      height: 1.2%;\n      animation: pulse @r(2s, 4s) ease-in-out infinite;\n      animation-delay: -@r(4s);\n      \n      @keyframes pulse {\n        0%, 100% { width: @rand(10%, 60%); opacity: 0.6; }\n        50% { width: @rand(40%, 100%); opacity: 1; }\n      }"
-  },
-  {
-    "id": "cuadrados-aleatorios",
-    "name": "Confeti Elegante",
-    "template": ":doodle {\n        @grid: 12 / 100vmax;\n      }\n      background: #60569e;\n      border-radius: 2px;\n      transform: scale(@r(.3, .8)) rotate(@r(360deg));\n      animation: float @r(4s, 8s) ease-in-out infinite;\n      animation-delay: -@r(8s);\n      \n      @keyframes float {\n        0%, 100% { \n          transform: scale(@r(.3, .6)) rotate(@r(360deg)) translateY(0);\n          opacity: @r(.5, .7);\n        }\n        50% { \n          transform: scale(@r(.6, 1)) rotate(@r(360deg)) translateY(@r(-20px, 20px));\n          opacity: @r(.7, 1);\n        }\n      }"
+    "name": "Arquitectura 3D",
+    "template": ":doodle {\n  @grid: 7x5 / 100vw 100vh;\n  gap: 20px;\n}\n@size: @r(100px, 200px);\nbackground: linear-gradient(@r(360deg), hsla(260, 60%, 50%, 0.8), hsla(220, 60%, 40%, 0.6));\nborder-radius: 12px;\nbox-shadow: 0 10px 30px rgba(0,0,0,0.4);\ntransform: perspective(1000px) rotateX(@r(-20deg, 20deg)) rotateY(@r(-20deg, 20deg));\nanimation: float3d @r(8s, 15s) ease-in-out infinite alternate;\n@keyframes float3d {\n  from { transform: perspective(1000px) rotateX(@r(-10deg)) rotateY(@r(-10deg)) translateZ(0); }\n  to { transform: perspective(1000px) rotateX(@r(20deg)) rotateY(@r(20deg)) translateZ(50px); }\n}"
   },
   {
     "id": "super-doodle-creativo",
-    "name": "Super Doodle Creativo (Hector)",
-    "template": ":doodle {\n        @grid: 8x6 / 100vw 100vh;\n      }\n\n      @size: @r(60px, 120px);\n      position: absolute;\n      left: @r(100%);\n      top: @r(100%);\n      \n      @content: @p(\n        '🚀', '🪐', '👾', '✏️', '👁️', \n        '🧠', '💡', '🎉', '🍩', '🤖',\n        'H', 'E', 'C', 'T', 'O', 'R'\n      );\n      \n      font-size: @r(40px, 80px);\n      color: @p(#ffbe0b, #fb5607, #ff006e, #8338ec, #3a86ff);\n      text-shadow: \n        3px 3px 0px rgba(0,0,0,0.3),\n        6px 6px 15px rgba(0,0,0,0.2);\n      \n      transform: rotate(@r(-20deg, 20deg)) scale(0.8);\n      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);\n      \n      animation: float @r(3s, 6s) ease-in-out infinite;\n      animation-delay: -@r(6s);\n      \n      :hover {\n        transform: rotate(0deg) scale(1.3);\n        filter: drop-shadow(0 0 20px currentColor);\n      }\n      \n      @keyframes float {\n        0%, 100% { transform: translateY(0px) rotate(@r(-20deg, 20deg)); }\n        50% { transform: translateY(@r(-30px, -10px)) rotate(@r(-10deg, 10deg)); }\n      }"
+    "name": "Super Doodle (Héctor Edition)",
+    "template": ":doodle {\n  @grid: 8x6 / 100vw 100vh;\n}\n@size: @r(50px, 100px);\nposition: absolute;\nleft: @r(100%); top: @r(100%);\n@content: @p('🚀', '🪐', '👾', '🎨', '💡', '🤖', 'H', 'E', 'C', 'T', 'O', 'R');\nfont-size: @r(30px, 70px);\ncolor: @p(#ffbe0b, #fb5607, #ff006e, #8338ec, #3a86ff);\ntext-shadow: 0 0 15px rgba(255,255,255,0.3);\nanimation: bounce @r(3s, 7s) ease-in-out infinite;\n@keyframes bounce {\n  0%, 100% { transform: translateY(0) scale(0.8); }\n  50% { transform: translateY(-40px) scale(1.2); }\n}\n:hover { transform: scale(1.5) rotate(15deg); z-index: 100; }"
   }
 ]

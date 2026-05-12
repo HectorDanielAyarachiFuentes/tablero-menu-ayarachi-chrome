@@ -43,12 +43,21 @@ export async function initDoodleSettings(activeDoodleId) {
     }
     button.addEventListener('click', () => handleDoodleSelection(doodle.id));
 
-    // Pausar la animación de la miniatura para mejorar el rendimiento
+    // Pausar inicialmente para rendimiento
     const doodleElement = button.querySelector('css-doodle');
     if (doodleElement) {
-      // Se añade un pequeño retardo para asegurar que el elemento se haya inicializado
-      setTimeout(() => doodleElement.pause(), 100);
+        setTimeout(() => doodleElement.pause(), 100);
     }
+
+    // Interactividad Premium: Activar animación al pasar el ratón, pausar al salir
+    button.addEventListener('mouseenter', () => {
+      const doodleElement = button.querySelector('css-doodle');
+      if (doodleElement) doodleElement.resume();
+    });
+    button.addEventListener('mouseleave', () => {
+      const doodleElement = button.querySelector('css-doodle');
+      if (doodleElement) doodleElement.pause();
+    });
 
     doodleList.appendChild(button);
   });
