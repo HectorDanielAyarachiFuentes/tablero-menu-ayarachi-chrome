@@ -190,7 +190,13 @@ export async function applyPremiumTheme(themeId, skipSave = false) {
     document.documentElement.style.setProperty('--clock-color', colors.clock);
     document.documentElement.style.setProperty('--date-color', colors.date);
 
-    // 4. Actualizar controles de la UI
+    // 4. Aplicar fuentes si existen
+    if (theme.fonts) {
+        document.documentElement.style.setProperty('--greeting-font', theme.fonts.main);
+        document.documentElement.style.setProperty('--date-font', theme.fonts.secondary);
+    }
+
+    // 5. Actualizar controles de la UI
     updateThemeControls(theme);
 
     // 5. Marcar tema activo
