@@ -211,6 +211,9 @@ export async function applyPremiumTheme(themeId, skipSave = false) {
             selectedGradient: theme.background.gradient,
             doodle: 'none'
         });
+
+        // GUARDADO ULTRA-RÁPIDO para eliminar parpadeos (localStorage es síncrono)
+        localStorage.setItem('lastPremiumGradient', theme.background.gradient);
     }
 }
 
