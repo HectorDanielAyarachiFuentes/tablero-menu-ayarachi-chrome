@@ -133,6 +133,19 @@
       dateEl.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
     }
 
+    // --- Cargar Placeholder del buscador para evitar salto visual ---
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      const engine = settings.engine || 'google';
+      const placeholders = {
+        'google': 'Buscar en Google...',
+        'bing': 'Buscar en Bing...',
+        'duckduckgo': 'Buscar en DuckDuckGo...',
+        'yahoo': 'Buscar en Yahoo!'
+      };
+      searchInput.placeholder = placeholders[engine] || 'Buscar en la web...';
+    }
+
   } catch (error) {
     console.error('Error in pre-loader:', error);
     // Si falla, la app principal lo cargará de todas formas.

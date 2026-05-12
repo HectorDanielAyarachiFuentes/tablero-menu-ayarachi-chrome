@@ -40,11 +40,21 @@ body.with-load-animations .tab-pane {
   animation: fadeIn 0.4s ease-out forwards;
 }
 
-body.with-load-animations.loading .live-info,
-body.with-load-animations.loading .search-section,
-body.with-load-animations.loading .tiles-section {
+body.loading .main {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(10px);
+}
+
+.main {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.loading .live-info,
+body.loading .search-section,
+body.loading .tiles-section {
+  opacity: 0;
 }
 
 body.with-load-animations .search-section {

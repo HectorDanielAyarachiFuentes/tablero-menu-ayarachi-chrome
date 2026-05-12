@@ -68,40 +68,34 @@ export function saveAndRender() {
 export function renderTiles() {
     const tilesEl = $('#tiles');
     const tpl = $('#tileTpl');
-    // Comprobación de seguridad: si la plantilla no existe, no podemos renderizar.
-    if (!tpl) {
-        console.error('El elemento de plantilla #tileTpl no se encontró en el DOM. No se pueden renderizar los accesos.');
-        tilesEl.innerHTML = '<p style="text-align: center; opacity: 0.7;">Error: No se pudo cargar la plantilla de accesos.</p>';
-        return;
-    }
-    const currentTiles = FolderManager.getTilesForCurrentView(tiles);
-    const displayableTiles = currentTiles.filter(t => t.type !== 'note'); // Filtrar notas
-    let skeletonHTML = '';
-    tilesEl.innerHTML = ''; // Limpiar antes de añadir
+    if (!tpl) return;
 
-    for (let i = 0; i < displayableTiles.length; i++) {
-        const skeleton = document.createElement('div');
-        skeleton.className = 'tile-skeleton';
-        skeleton.style.setProperty('--animation-delay', `${i * 50}ms`);
-        tilesEl.appendChild(skeleton);
-    }
+    const currentTiles = FolderManager.getTilesForCurrentView(tiles);
+    const displayableTiles = currentTiles.filter(t => t.type !== 'note');
+    
+    // Usamos un fragmento para construir todo en memoria (ULTRA RÁPIDO)
+    const fragment = document.createDocumentFragment();
 
     displayableTiles.forEach((t, i) => {
         const node = FolderManager.renderTile(t, i, tpl, tiles);
-        // La animación ya se aplica dentro de renderTile
-        if (tilesEl.children[i]) tilesEl.replaceChild(node, tilesEl.children[i]);
+        node.style.setProperty('--animation-delay', `${i * 30}ms`);
+        fragment.appendChild(node);
     });
 
+    // Botón de añadir
     const addNode = document.createElement('div');
     addNode.className = 'tile tile-add';
-    addNode.href = '#';
     addNode.innerHTML = `<span>+</span><div>Añadir</div>`;
-    addNode.style.setProperty('--animation-delay', `${displayableTiles.length * 50}ms`);
+    addNode.style.setProperty('--animation-delay', `${displayableTiles.length * 30}ms`);
     addNode.addEventListener('click', (e) => {
         e.preventDefault();
         openModal();
     });
-    tilesEl.appendChild(addNode);
+    fragment.appendChild(addNode);
+
+    // Inyectamos todo de golpe (SOLO UN PINTADO)
+    tilesEl.innerHTML = '';
+    tilesEl.appendChild(fragment);
 
     $('#backBtn').hidden = FolderManager.isRootView();
 }

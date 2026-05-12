@@ -10,6 +10,7 @@ import { closeModal } from './modal.js';
 import { PREDEFINED_GREETINGS } from '../../utils/greetings-list.js';
 import { FileSystem } from '../system/file-system.js';
 import { initPanelSettings } from '../settings/settings-panels.js';
+import { ensurePremiumThemesUI } from '../settings/themes-premium.js';
 
 export function initUI() {
     updateClock();
@@ -80,6 +81,11 @@ export function switchToTab(tabId) {
     if (btnToActivate) btnToActivate.classList.add('active');
     if (paneToActivate) paneToActivate.style.display = 'block';
     setTimeout(() => paneToActivate?.classList.add('active'), 10); // Permitir que se aplique display:block
+    
+    // Si entramos en la pestaña de fondo, asegurar que los temas premium estén renderizados
+    if (tabId === 'fondo') {
+        ensurePremiumThemesUI();
+    }
 }
 
 function getRandomGreeting(period, greetingsList) {

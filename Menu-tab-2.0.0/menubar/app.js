@@ -39,32 +39,27 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 });
 
 async function init() {
-  // 1. Carga inicial desde la caché local (muy rápido)
-  // Primero, intenta cargar desde el archivo local (OPFS es automático ahora).
-  let settings = await FileSystem.loadDataFromFile();
-  let loadedFromFile = !!settings;
-
-  if (!settings) {
-    // Si no se pudo cargar del archivo, usa el almacenamiento del navegador
-    settings = await storageGet(STORAGE_KEYS);
-  }
+  // 1. Carga ultra-rápida desde chrome.storage.local (Prioridad Máxima)
+  const settings = await storageGet(STORAGE_KEYS);
+  
+  // 2. Aplicar la configuración de inmediato para mostrar la UI
   await applySettings(settings, false);
 
-  // 2. Espera a que las fuentes estén cargadas para evitar FOUC
-  if (document.fonts && document.fonts.ready) {
-    await document.fonts.ready;
-  } else {
-    await new Promise(resolve => setTimeout(resolve, 150));
-  }
-
-  // 3. Muestra la UI inmediatamente con los datos de la caché
+  // 3. Quitar el velo de carga YA MISMO
   document.body.classList.remove('loading');
 
-  // 4. En segundo plano, si no cargamos del archivo, busca actualizaciones desde chrome.storage.sync
-  if (!loadedFromFile) {
-    const syncedSettings = await storageGet(STORAGE_KEYS, false);
-    await applySettings(syncedSettings, true);
-  }
+  // 4. En segundo plano (sin bloquear), intentar sincronizar con el sistema de archivos
+  // o buscar actualizaciones en sync.
+  (async () => {
+    try {
+      const fileSettings = await FileSystem.loadDataFromFile();
+      if (fileSettings) {
+        await applySettings(fileSettings, true);
+      }
+    } catch (e) {
+      console.warn("FileSystem sync postponed/failed:", e);
+    }
+  })();
 }
 
 async function applySettings(settings, isUpdate = false) {
@@ -188,6 +183,9 @@ async function applySettings(settings, isUpdate = false) {
 
     WeatherManager.init();
     setInterval(WeatherManager.fetchAndRender, 1800000); // Actualiza el clima cada 30 minutos
+
+    // --- FINAL DE CARGA: Mostrar de inmediato ---
+    document.body.classList.remove('loading');
     loadNonCriticalCSS();
   }
 }
@@ -284,8 +282,16 @@ export async function updateBackground() {
 init();
 
 function loadNonCriticalCSS() {
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = 'css/non-critical.css';
-  document.head.appendChild(link);
+  const files = [
+    'css/widgets.css',
+    'css/themes-premium.css',
+    'css/drag-drop-safe.css'
+  ];
+  
+  files.forEach(file => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = file;
+    document.head.appendChild(link);
+  });
 }
