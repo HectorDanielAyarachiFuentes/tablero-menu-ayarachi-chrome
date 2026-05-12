@@ -8,16 +8,16 @@
   --greeting-font: 'Poppins', sans-serif;
   --date-font: 'Poppins', sans-serif;
 
-  --panel-text-color: #dbe7ff;
-  --panel-text-secondary-color: #dbe7ff;
-  --panel-bg: #0e193a;
-  --accent-color: #8e44ad;
+  --panel-text-color: #ffffff;
+  --panel-text-secondary-color: rgba(255, 255, 255, 0.7);
+  --panel-bg: rgba(0, 0, 0, 0.2);
+  --accent-color: #ffffff;
   --button-bg: rgba(255, 255, 255, 0.05);
   --button-hover-bg: rgba(255, 255, 255, 0.1);
   --panel-radius: 12px;
 
-  --panel-opacity: 0.05;
-  --panel-blur: 6px;
+  --panel-opacity: 0.1;
+  --panel-blur: 10px;
 
   font-family: 'Poppins', sans-serif;
 }

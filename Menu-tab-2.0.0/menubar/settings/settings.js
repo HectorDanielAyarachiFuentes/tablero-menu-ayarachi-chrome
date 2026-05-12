@@ -20,9 +20,9 @@ let appState = {};
 let importInput;
 
 const DEFAULT_PANEL_SETTINGS = {
-    panelBg: '#0e193a',
-    panelOpacity: 0.05,
-    panelBlur: 6,
+    panelBg: 'rgba(0, 0, 0, 0.2)',
+    panelOpacity: 0.1,
+    panelBlur: 10,
     panelRadius: 12
 };
 
@@ -467,25 +467,50 @@ async function handleImport(e) {
 }
 
 export function applyTextColors(settings) {
+    const isPremium = !!(settings.activePremiumTheme && settings.premiumThemeData);
+    const premiumColors = isPremium ? settings.premiumThemeData.colors : null;
+
     const textColors = {
-        greetingColor: '--greeting-color',
-        nameColor: '--name-color',
-        clockColor: '--clock-color',
-        dateColor: '--date-color'
+        greetingColor: { var: '--greeting-color', premiumKey: 'greeting' },
+        nameColor: { var: '--name-color', premiumKey: 'name' },
+        clockColor: { var: '--clock-color', premiumKey: 'clock' },
+        dateColor: { var: '--date-color', premiumKey: 'date' }
     };
-    Object.entries(textColors).forEach(([key, cssVar]) => {
-        const color = settings[key] || '#FFFFFF';
-        document.documentElement.style.setProperty(cssVar, color);
+
+    Object.entries(textColors).forEach(([key, config]) => {
+        let color;
+        if (isPremium && premiumColors[config.premiumKey]) {
+            color = premiumColors[config.premiumKey];
+        } else {
+            color = settings[key] || '#FFFFFF';
+        }
+        document.documentElement.style.setProperty(config.var, color);
     });
+
+    // Colores de texto del panel
+    if (isPremium) {
+        document.documentElement.style.setProperty('--panel-text-color', premiumColors.text);
+        document.documentElement.style.setProperty('--panel-text-secondary-color', premiumColors.textSecondary);
+        document.documentElement.style.setProperty('--accent-color', premiumColors.accent);
+    }
 }
 
 export function applyTextFonts(settings) {
+    const isPremium = !!(settings.activePremiumTheme && settings.premiumThemeData);
+    const premiumFonts = isPremium ? settings.premiumThemeData.fonts : null;
+
     const textFonts = {
-        greetingFont: '--greeting-font',
-        dateFont: '--date-font'
+        greetingFont: { var: '--greeting-font', premiumKey: 'main' },
+        dateFont: { var: '--date-font', premiumKey: 'secondary' }
     };
-    Object.entries(textFonts).forEach(([key, cssVar]) => {
-        const font = settings[key] || '\'Poppins\', sans-serif';
-        document.documentElement.style.setProperty(cssVar, font);
+
+    Object.entries(textFonts).forEach(([key, config]) => {
+        let font;
+        if (isPremium && premiumFonts[config.premiumKey]) {
+            font = premiumFonts[config.premiumKey];
+        } else {
+            font = settings[key] || '\'Poppins\', sans-serif';
+        }
+        document.documentElement.style.setProperty(config.var, font);
     });
 }

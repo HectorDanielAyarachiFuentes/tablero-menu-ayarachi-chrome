@@ -5,7 +5,7 @@
 import { $, $$, saveAndSyncSetting, storageGet } from '../core/utils.js';
 
 const PANEL_THEMES = [
-    { id: 'default', name: 'Por Defecto', panelBg: '#0e193a', panelOpacity: 0.05, panelBlur: 6, panelRadius: 12, panelShadowEnabled: false, panelTextColor: '#f0f8ff', panelTextSecondaryColor: '#cdd9e5' },
+    { id: 'default', name: 'Por Defecto', panelBg: 'rgba(0, 0, 0, 0.2)', panelOpacity: 0.1, panelBlur: 10, panelRadius: 12, panelShadowEnabled: false, panelTextColor: '#ffffff', panelTextSecondaryColor: 'rgba(255, 255, 255, 0.7)' },
     { id: 'glass', name: 'Cristalino', panelBg: '#ffffff', panelOpacity: 0.1, panelBlur: 10, panelRadius: 16, panelShadowEnabled: true, panelShadowColor: '#000000', panelShadowBlur: 20, panelTextColor: '#000000', panelTextSecondaryColor: '#333333' },
     { id: 'solid', name: 'Sólido', panelBg: '#1C1C1E', panelOpacity: 0.85, panelBlur: 0, panelRadius: 10, panelShadowEnabled: true, panelShadowColor: '#000000', panelShadowBlur: 15, panelTextColor: '#f5f5f7', panelTextSecondaryColor: '#a0a0a0' },
     { id: 'deep-ocean', name: 'Océano', panelBg: '#001f3f', panelOpacity: 0.2, panelBlur: 8, panelRadius: 14, panelShadowEnabled: true, panelShadowColor: '#000000', panelShadowBlur: 15, panelTextColor: '#f0f8ff', panelTextSecondaryColor: '#b3e5fc' },
@@ -208,13 +208,13 @@ async function loadAndApplyPanelSettings() {
     ]);
 
     // Aplicar valores o defaults
-    const panelBg = settings.panelBg || '#0e193a';
+    const panelBg = settings.panelBg || 'rgba(0, 0, 0, 0.2)';
     $('#panelColor').value = panelBg; handleColorChange('panelBg', panelBg, '--panel-bg');
-    $('#panelTextColor').value = settings.panelTextColor || '#dbe7ff'; handleColorChange('panelTextColor', settings.panelTextColor || '#dbe7ff', '--panel-text-color');
-    $('#panelTextSecondaryColor').value = settings.panelTextSecondaryColor || '#dbe7ff'; handleColorChange('panelTextSecondaryColor', settings.panelTextSecondaryColor || '#dbe7ff', '--panel-text-secondary-color');
+    $('#panelTextColor').value = settings.panelTextColor || '#ffffff'; handleColorChange('panelTextColor', settings.panelTextColor || '#ffffff', '--panel-text-color');
+    $('#panelTextSecondaryColor').value = settings.panelTextSecondaryColor || 'rgba(255, 255, 255, 0.7)'; handleColorChange('panelTextSecondaryColor', settings.panelTextSecondaryColor || 'rgba(255, 255, 255, 0.7)', '--panel-text-secondary-color');
 
-    $('#panelOpacity').value = settings.panelOpacity ?? 0.05;
-    $('#panelBlur').value = settings.panelBlur ?? 6;
+    $('#panelOpacity').value = settings.panelOpacity ?? 0.1;
+    $('#panelBlur').value = settings.panelBlur ?? 10;
     $('#panelRadius').value = settings.panelRadius ?? 12;
 
     const shadowEnabled = settings.panelShadowEnabled || false;

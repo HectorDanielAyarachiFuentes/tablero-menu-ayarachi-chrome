@@ -202,16 +202,13 @@ export async function applyPremiumTheme(themeId, skipSave = false) {
     // 5. Marcar tema activo
     updateActivePremiumTheme(themeId);
 
-    // 6. Guardar configuración
+    // 6. Guardar configuración completa para carga instantánea
     if (!skipSave) {
         await saveAndSyncSetting({
             activePremiumTheme: themeId,
-            bgType: 'gradient',
+            premiumThemeData: theme, // GUARDAMOS TODO EL TEMA AQUÍ
+            bgType: 'premium',
             selectedGradient: theme.background.gradient,
-            // LIMPIAR configuraciones conflictivas para asegurar persistencia
-            bgData: null,
-            bgUrl: null,
-            gradient: null,
             doodle: 'none'
         });
     }

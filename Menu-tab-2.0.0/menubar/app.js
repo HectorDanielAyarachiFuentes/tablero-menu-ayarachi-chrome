@@ -128,15 +128,28 @@ async function applySettings(settings, isUpdate = false) {
   }
 
 
-  const panelBg = settings.panelBg || '#0e193a';
-  const panelOpacity = settings.panelOpacity ?? 0.05;
-  const panelBlur = settings.panelBlur ?? 6;
-  const panelRadius = settings.panelRadius ?? 12;
+  // --- LÓGICA DE PANELES (Prioridad: Tema Premium > Manual) ---
+  let panelBg, panelOpacity, panelBlur, panelRadius;
+
+  if (settings.activePremiumTheme && settings.premiumThemeData) {
+    const pt = settings.premiumThemeData.panel;
+    panelBg = pt.bg;
+    panelOpacity = pt.opacity;
+    panelBlur = pt.blur;
+    panelRadius = pt.radius;
+  } else {
+    panelBg = settings.panelBg || 'rgba(0, 0, 0, 0.2)';
+    panelOpacity = settings.panelOpacity ?? 0.1;
+    panelBlur = settings.panelBlur ?? 10;
+    panelRadius = settings.panelRadius ?? 12;
+  }
+
   document.documentElement.style.setProperty('--panel-bg', panelBg);
   document.documentElement.style.setProperty('--panel-opacity', panelOpacity);
   document.documentElement.style.setProperty('--panel-blur', `${panelBlur}px`);
   document.documentElement.style.setProperty('--panel-radius', `${panelRadius}px`);
-  updatePanelRgb(panelBg); // Asegura que el valor RGB se actualice para la opacidad
+  updatePanelRgb(panelBg);
+  
   $('#panelColor').value = panelBg;
   $('#panelOpacity').value = panelOpacity;
   $('#panelBlur').value = panelBlur;

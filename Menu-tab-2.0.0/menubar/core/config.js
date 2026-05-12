@@ -22,7 +22,10 @@ export const STORAGE_KEYS = [
   'greetingColor',
   'nameColor',
   'clockColor',
-  'dateColor'
+  'dateColor',
+  'activePremiumTheme',
+  'premiumThemeData',
+  'bgType'
 ];
 
 export const API_URLS = {
