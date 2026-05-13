@@ -131,6 +131,7 @@ function initInteractionLogic(settings) {
       bgDisplayMode: settings.bgDisplayMode,
       isCustomBg: !!(settings.bgData || settings.bgUrl)
     });
+    loadGradients(settings.gradient);
 }
 
 async function initHeavySystems(settings) {

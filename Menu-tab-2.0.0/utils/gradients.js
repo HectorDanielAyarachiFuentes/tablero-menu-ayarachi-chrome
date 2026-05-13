@@ -17,6 +17,46 @@ export const DEFAULT_GRADIENT_COLORS = {
 // He añadido `cssVariables` a algunos como ejemplo.
 const gradientsData = [
     {
+        "id": "aurora-mist",
+        "name": "Aurora Mist (Modern)",
+        "gradient": "linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)",
+        "cssVariables": {
+            '--text-color': '#e0f7fa',
+            '--panel-bg': 'rgba(15, 23, 42, 0.6)',
+            '--accent-color': '#00f2fe'
+        }
+    },
+    {
+        "id": "midnight-neon",
+        "name": "Midnight Neon",
+        "gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "cssVariables": {
+            '--text-color': '#e0e7ff',
+            '--panel-bg': 'rgba(30, 27, 75, 0.7)',
+            '--accent-color': '#a5b4fc'
+        }
+    },
+    {
+        "id": "solar-flare",
+        "name": "Solar Flare",
+        "gradient": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        "cssVariables": {
+            '--text-color': '#fff1f2',
+            '--panel-bg': 'rgba(67, 12, 23, 0.6)',
+            '--accent-color': '#f093fb'
+        }
+    },
+    {
+        "id": "deep-space-mesh",
+        "name": "Deep Space Mesh",
+        "gradient": "radial-gradient(at 0% 0%, #000428 0, transparent 50%), radial-gradient(at 50% 0%, #004e92 0, transparent 50%), radial-gradient(at 100% 0%, #000428 0, transparent 50%)",
+        "cssVariables": {
+            '--text-color': '#d1d5db',
+            '--panel-bg': 'rgba(3, 7, 18, 0.8)',
+            '--accent-color': '#3b82f6'
+        }
+    },
+    {
         "id": "mango",
         "name": "Mango",
         "gradient": "linear-gradient(to right, #355c7d 0%, #6c5b7b 33%, #c06c84 100%)",
