@@ -585,7 +585,20 @@ export async function applyPremiumTheme(themeId, skipSave = false) {
             premiumThemeData: theme,
             bgType: 'premium',
             selectedGradient: theme.background.gradient,
-            doodle: 'none'
+            // Guardamos los valores individuales para que el usuario pueda "editarlos" y que persistan
+            panelBg: theme.panel.bg,
+            panelOpacity: theme.panel.opacity,
+            panelBlur: theme.panel.blur,
+            panelRadius: theme.panel.radius,
+            panelTextColor: theme.colors.text,
+            panelTextSecondaryColor: theme.colors.textSecondary,
+            greetingColor: theme.colors.greeting,
+            nameColor: theme.colors.name,
+            clockColor: theme.colors.clock,
+            dateColor: theme.colors.date,
+            greetingFont: theme.fonts ? theme.fonts.main : undefined,
+            dateFont: theme.fonts ? theme.fonts.secondary : undefined
+            // Eliminamos doodle: 'none' para permitir persistencia si el usuario añade uno después
         });
         localStorage.setItem('lastPremiumGradient', theme.background.gradient);
     }
@@ -681,7 +694,7 @@ async function loadPremiumThemeSettings() {
     if (settings.dayThemeId && daySelect) daySelect.value = settings.dayThemeId;
     if (settings.nightThemeId && nightSelect) nightSelect.value = settings.nightThemeId;
     if (autoModeEnabled && (settings.dayThemeId || settings.nightThemeId)) startAutoMode();
-    else if (settings.activePremiumTheme) applyPremiumTheme(settings.activePremiumTheme);
+    else if (settings.activePremiumTheme) applyPremiumTheme(settings.activePremiumTheme, true);
 }
 
 window.addEventListener('beforeunload', () => {

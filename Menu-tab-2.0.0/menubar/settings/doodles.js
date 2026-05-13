@@ -34,11 +34,7 @@ export function initDoodleSettings(activeDoodleId) {
     
     button.addEventListener('click', async () => {
         await saveAndSyncSetting({
-          doodle: doodle.id,
-          activePremiumTheme: null,
-          bgUrl: null,
-          bgData: null,
-          gradient: null
+          doodle: doodle.id
         });
         // Notificamos al sistema que el fondo ha cambiado (usamos un evento para evitar import circular)
         window.dispatchEvent(new CustomEvent('background-changed'));

@@ -484,21 +484,24 @@ export function applyTextColors(settings) {
     };
 
     Object.entries(textColors).forEach(([key, config]) => {
-        let color;
-        if (isPremium && premiumColors && premiumColors[config.premiumKey]) {
+        // Prioridad: 1. Ajuste individual (el del usuario), 2. Ajuste del tema premium
+        let color = settings[key];
+        if (color === undefined && isPremium && premiumColors) {
             color = premiumColors[config.premiumKey];
-        } else {
-            color = settings[key] || '#FFFFFF';
         }
+        if (color === undefined) color = '#FFFFFF';
+        
         document.documentElement.style.setProperty(config.var, color);
     });
 
     // Colores de texto del panel
-    if (isPremium) {
-        document.documentElement.style.setProperty('--panel-text-color', premiumColors.text);
-        document.documentElement.style.setProperty('--panel-text-secondary-color', premiumColors.textSecondary);
-        document.documentElement.style.setProperty('--accent-color', premiumColors.accent);
-    }
+    const panelTextColor = settings.panelTextColor || (premiumColors ? premiumColors.text : '#ffffff');
+    const panelTextSecondaryColor = settings.panelTextSecondaryColor || (premiumColors ? premiumColors.textSecondary : 'rgba(255, 255, 255, 0.7)');
+    const accentColor = settings.accentColor || (premiumColors ? premiumColors.accent : '#a855f7');
+
+    document.documentElement.style.setProperty('--panel-text-color', panelTextColor);
+    document.documentElement.style.setProperty('--panel-text-secondary-color', panelTextSecondaryColor);
+    document.documentElement.style.setProperty('--accent-color', accentColor);
 }
 
 export function applyTextFonts(settings) {
@@ -511,12 +514,12 @@ export function applyTextFonts(settings) {
     };
 
     Object.entries(textFonts).forEach(([key, config]) => {
-        let font;
-        if (isPremium && premiumFonts && premiumFonts[config.premiumKey]) {
+        let font = settings[key];
+        if (font === undefined && isPremium && premiumFonts) {
             font = premiumFonts[config.premiumKey];
-        } else {
-            font = settings[key] || '\'Poppins\', sans-serif';
         }
+        if (font === undefined) font = '\'Poppins\', sans-serif';
+        
         document.documentElement.style.setProperty(config.var, font);
     });
 }

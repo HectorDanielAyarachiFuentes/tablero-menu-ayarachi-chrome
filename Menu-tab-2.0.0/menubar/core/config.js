@@ -16,7 +16,7 @@ export const STORAGE_KEYS = [
   'panelBlur',
   'panelRadius',
   'randomBg',
-  'trash', // Re-added trash
+  'trash',
   'autoSync',
   'doodle',
   'greetingColor',
@@ -25,7 +25,23 @@ export const STORAGE_KEYS = [
   'dateColor',
   'activePremiumTheme',
   'premiumThemeData',
-  'bgType'
+  'bgType',
+  'bgDisplayMode',
+  'use12HourFormat',
+  'showSeconds',
+  'greetingPreference',
+  'customGreetings',
+  'showSearch',
+  'showWeather',
+  'showDate',
+  'enableLoadAnimations',
+  'greetingFont',
+  'dateFont',
+  'panelTextColor',
+  'panelTextSecondaryColor',
+  'panelShadowEnabled',
+  'panelShadowColor',
+  'panelShadowBlur'
 ];
 
 export const API_URLS = {

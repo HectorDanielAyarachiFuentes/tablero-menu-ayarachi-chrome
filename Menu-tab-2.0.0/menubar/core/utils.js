@@ -21,7 +21,16 @@ export const storageGet = (keys, useCache = false) => new Promise(resolve => {
     chrome.storage.local.get(keys, resolve);
   } else { // Fallback para cuando no es una extensión
     const out = {};
-    keys.forEach(k => { out[k] = JSON.parse(localStorage.getItem(k)); });
+    if (keys) {
+      keys.forEach(k => { 
+        try { out[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { out[k] = localStorage.getItem(k); }
+      });
+    } else {
+      for(let i=0; i<localStorage.length; i++) {
+        const k = localStorage.key(i);
+        try { out[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { out[k] = localStorage.getItem(k); }
+      }
+    }
     resolve(out);
   }
 });

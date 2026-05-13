@@ -24,8 +24,8 @@ import { initPremiumThemes } from './settings/themes-premium.js';
 let currentBackgroundValue = '';
 
 async function init() {
-  // 1. CARGA CRÍTICA
-  const settings = await storageGet(STORAGE_KEYS);
+  // 1. CARGA CRÍTICA - Obtenemos TODOS los ajustes, no solo una lista parcial
+  const settings = await storageGet(null);
   
   await applyCriticalVisuals(settings);
   document.body.classList.remove('loading');
@@ -44,11 +44,20 @@ async function init() {
       loadNonCriticalCSS();
   }, 500);
 
-  // Fase 4: Sincronización
+  // Fase 4: Sincronización (Solo restaurar si el storage local está vacío)
   setTimeout(async () => {
       try {
-          const fileSettings = await FileSystem.loadDataFromFile();
-          if (fileSettings) await applyCriticalVisuals(fileSettings);
+          // Comprobar si el storage está vacío (falla catastrófica o limpieza de caché)
+          const currentSettings = await storageGet(null);
+          const isEmpty = !currentSettings.tiles || currentSettings.tiles.length === 0;
+
+          if (isEmpty) {
+            const fileSettings = await FileSystem.loadDataFromFile();
+            if (fileSettings) {
+                await applyCriticalVisuals(fileSettings);
+                console.log("Restauración automática desde respaldo interno completada.");
+            }
+          }
       } catch (e) { console.warn("FS Sync postponed:", e); }
   }, 2000);
 }
@@ -75,10 +84,10 @@ async function applyCriticalVisuals(settings) {
   $('#date').hidden = !(settings.showDate ?? true);
 
   const pt = (settings.activePremiumTheme && settings.premiumThemeData) ? settings.premiumThemeData.panel : null;
-  const panelBg = pt ? pt.bg : (settings.panelBg || 'rgba(0, 0, 0, 0.2)');
-  const panelOpacity = pt ? pt.opacity : (settings.panelOpacity ?? 0.1);
-  const panelBlur = pt ? pt.blur : (settings.panelBlur ?? 10);
-  const panelRadius = pt ? pt.radius : (settings.panelRadius ?? 12);
+  const panelBg = settings.panelBg || (pt ? pt.bg : 'rgba(0, 0, 0, 0.2)');
+  const panelOpacity = settings.panelOpacity ?? (pt ? pt.opacity : 0.1);
+  const panelBlur = settings.panelBlur ?? (pt ? pt.blur : 10);
+  const panelRadius = settings.panelRadius ?? (pt ? pt.radius : 12);
 
   const root = document.documentElement.style;
   root.setProperty('--panel-bg', panelBg);
@@ -120,7 +129,7 @@ async function initHeavySystems(settings) {
 }
 
 export async function updateBackground() {
-  const settings = await storageGet(['doodle', 'bgData', 'bgUrl', 'gradient', 'bgDisplayMode', 'activePremiumTheme']);
+  const settings = await storageGet(['doodle', 'bgData', 'bgUrl', 'gradient', 'bgDisplayMode', 'activePremiumTheme', 'premiumThemeData']);
   const doodleId = settings.doodle || 'none';
   const doodle = DOODLES_LIST.find(d => d.id === doodleId);
 
@@ -129,16 +138,25 @@ export async function updateBackground() {
 
   if (doodle && doodle.id !== 'none' && doodle.template) {
     $('.wrap').style.backgroundColor = 'transparent';
-    document.body.style.backgroundImage = 'none';
+    document.documentElement.style.background = 'transparent'; // Transparent html
+    document.body.style.background = 'transparent'; // Fix: Make entire body transparent
     const backgroundDoodle = document.createElement('css-doodle');
     backgroundDoodle.innerHTML = doodle.template;
     doodleBgContainer.appendChild(backgroundDoodle);
-  } else if (!settings.activePremiumTheme) {
+  } else {
     $('.wrap').style.backgroundColor = '';
-    if (settings.bgData || settings.bgUrl) {
+    document.documentElement.style.background = ''; // Restore html
+    
+    // Restauramos el fondo que corresponda (Premium, Imagen o Degradado)
+    if (settings.activePremiumTheme && settings.premiumThemeData) {
+      document.body.style.background = settings.premiumThemeData.background.gradient;
+      document.body.classList.add('theme-background');
+    } else if (settings.bgData || settings.bgUrl) {
+      document.body.style.background = ''; // Limpiamos la transparencia general
       applyBackgroundStyles(settings.bgDisplayMode);
       document.body.style.backgroundImage = `url('${settings.bgData || settings.bgUrl}')`;
     } else {
+      document.body.style.background = ''; // Limpiamos la transparencia general
       applyGradient(settings.gradient || GRADIENTS[0].id);
     }
   }
