@@ -1,5 +1,5 @@
 (function() {
-  // 1. Obtener toda la configuración de un solo golpe (Mucho más rápido)
+  // 1. Obtener toda la configuración de un solo golpe
   let settings = {};
   try {
     const cache = localStorage.getItem('zero_flash_cache');
@@ -14,7 +14,6 @@
     const panel = theme.panel;
     const colors = theme.colors;
     
-    // Aplicar variables CSS al root inmediatamente
     root.setProperty('--panel-bg', settings.panelBg || panel.bg);
     root.setProperty('--panel-opacity', settings.panelOpacity ?? panel.opacity);
     root.setProperty('--panel-blur', (settings.panelBlur ?? panel.blur) + 'px');
@@ -32,30 +31,50 @@
     root.setProperty('--greeting-font', settings.greetingFont || (theme.fonts ? theme.fonts.main : "'Poppins', sans-serif"));
     root.setProperty('--date-font', settings.dateFont || (theme.fonts ? theme.fonts.secondary : "'Poppins', sans-serif"));
 
-    // Fondo del tema
     root.setProperty('background', theme.background.gradient, 'important');
     root.setProperty('background-attachment', 'fixed', 'important');
     root.setProperty('background-size', 'cover', 'important');
   } else if (settings.gradient) {
-    // Degradado simple
     root.setProperty('background', settings.gradient, 'important');
     root.setProperty('background-attachment', 'fixed', 'important');
     root.setProperty('background-size', 'cover', 'important');
   } else if (settings.bgData || settings.bgUrl) {
-    // Imagen de fondo
     const url = settings.bgData || settings.bgUrl;
     root.setProperty('background-image', 'url(' + url + ')', 'important');
     root.setProperty('background-size', 'cover', 'important');
     root.setProperty('background-position', 'center', 'important');
     root.setProperty('background-attachment', 'fixed', 'important');
+  } else if (settings.doodleColor) {
+    // Si hay un doodle, usar su color de fondo para evitar la máscara negra
+    root.setProperty('background', settings.doodleColor, 'important');
   } else {
-    // Fallback absoluto: Negro sólido
     root.setProperty('background', '#050505', 'important');
   }
 
-  // 3. Si hay doodle, forzar fondo negro sólido primero
-  if (settings.doodle && settings.doodle !== 'none') {
-    root.setProperty('background-color', '#050505', 'important');
+  // 3. Renderizado instantáneo del Doodle (si ya cargó la librería en el head)
+  if (settings.doodle && settings.doodle !== 'none' && settings.doodleTemplate) {
+    // Forzar transparencia para que el doodle se vea
+    root.setProperty('background', 'transparent', 'important');
+    
+    // Inyectar el doodle inmediatamente en el contenedor si ya existe en el DOM
+    // Si no existe aún (el body no se ha parseado), esperamos un microsegundo
+    const injectDoodle = () => {
+      const container = document.getElementById('doodle-background');
+      if (container && window.customElements && customElements.get('css-doodle')) {
+        // CORRECCIÓN: El template debe ir DENTRO de la etiqueta <css-doodle>
+        container.innerHTML = `
+          <css-doodle>
+            ${settings.doodleTemplate}
+            @keyframes reveal-stagger { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            &, :after, :before { animation: reveal-stagger 0.6s ease forwards !important; animation-delay: @calc(@i * 0.02)s !important; opacity: 0; }
+          </css-doodle>
+        `;
+        container.classList.add('ready');
+      } else {
+        setTimeout(injectDoodle, 10);
+      }
+    };
+    injectDoodle();
   }
 
   // 4. Bloquear transiciones iniciales
@@ -64,7 +83,6 @@
   style.innerHTML = '* { transition: none !important; }';
   document.documentElement.appendChild(style);
 
-  // Restaurar transiciones tras la carga
   window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       const s = document.getElementById('zero-flash-no-trans');

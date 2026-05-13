@@ -33,10 +33,20 @@ async function init() {
   criticalKeys.forEach(k => {
       if (settings[k] !== undefined) zeroFlashCache[k] = settings[k];
   });
+  
+  // Añadir template del doodle actual para carga instantánea
+  const currentDoodle = DOODLES_LIST.find(d => d.id === settings.doodle);
+  if (currentDoodle) {
+      zeroFlashCache.doodleTemplate = currentDoodle.template;
+      // Extraer color de fondo básico si existe
+      const bgMatch = currentDoodle.template.match(/background:\s*(#[a-fA-F0-9]{3,6}|rgba?\([^)]+\)|[a-z]+)/);
+      if (bgMatch) zeroFlashCache.doodleColor = bgMatch[1];
+  }
+
   localStorage.setItem('zero_flash_cache', JSON.stringify(zeroFlashCache));
   
   await applyCriticalVisuals(settings);
-  document.body.style.display = 'block';
+  $('.wrap').style.display = 'block';
   document.body.classList.remove('loading');
 
   // Escuchar cambios de fondo desde la configuración (evita dependencias circulares)
@@ -147,12 +157,34 @@ export async function updateBackground() {
 
   if (doodle && doodle.id !== 'none' && doodle.template) {
     $('.wrap').style.backgroundColor = 'transparent';
-    document.documentElement.style.setProperty('background', 'transparent', 'important'); // Overide with important
-    document.body.style.setProperty('background', 'transparent', 'important'); // Overide with important
+    document.documentElement.style.setProperty('background', 'transparent', 'important');
+    document.body.style.setProperty('background', 'transparent', 'important');
+    
     const backgroundDoodle = document.createElement('css-doodle');
-    backgroundDoodle.innerHTML = doodle.template;
+    
+    // Inyectar animación de revelado por partes (Stagger) directamente en el template
+    let template = doodle.template;
+    const staggerLogic = `
+      @keyframes reveal-stagger { 
+        from { opacity: 0; transform: translateY(10px); } 
+        to { opacity: 1; transform: translateY(0); } 
+      }
+      &, :after, :before { 
+        animation: reveal-stagger 0.6s ease forwards !important;
+        animation-delay: @calc(@i * 0.02)s !important;
+        opacity: 0;
+      }
+    `;
+    
+    backgroundDoodle.innerHTML = template + staggerLogic;
     doodleBgContainer.appendChild(backgroundDoodle);
+    
+    // Activar el contenedor (sin efecto cine, solo visibilidad)
+    requestAnimationFrame(() => {
+        setTimeout(() => doodleBgContainer.classList.add('ready'), 50);
+    });
   } else {
+    doodleBgContainer.classList.remove('ready');
     $('.wrap').style.backgroundColor = '';
     document.documentElement.style.removeProperty('background'); // Remove the important override
     document.body.style.removeProperty('background');
