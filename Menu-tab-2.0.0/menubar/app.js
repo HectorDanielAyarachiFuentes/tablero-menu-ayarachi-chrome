@@ -28,7 +28,7 @@ async function init() {
   const settings = await storageGet(null);
 
   // Actualizar caché síncrona para la próxima carga (Zero-Flash)
-  const criticalKeys = ['panelBg', 'panelOpacity', 'panelBlur', 'panelRadius', 'panelTextColor', 'panelTextSecondaryColor', 'accentColor', 'greetingColor', 'nameColor', 'clockColor', 'dateColor', 'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData', 'doodle', 'gradient', 'bgData', 'bgUrl'];
+  const criticalKeys = ['panelBg', 'panelOpacity', 'panelBlur', 'panelRadius', 'panelTextColor', 'panelTextSecondaryColor', 'accentColor', 'greetingColor', 'nameColor', 'clockColor', 'dateColor', 'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData', 'doodle', 'gradient', 'bgData', 'bgUrl', 'bgColor'];
   const zeroFlashCache = {};
   criticalKeys.forEach(k => {
       if (settings[k] !== undefined) zeroFlashCache[k] = settings[k];
