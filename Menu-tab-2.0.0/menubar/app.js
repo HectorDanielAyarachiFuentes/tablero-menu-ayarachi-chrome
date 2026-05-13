@@ -26,8 +26,17 @@ let currentBackgroundValue = '';
 async function init() {
   // 1. CARGA CRÍTICA - Obtenemos TODOS los ajustes, no solo una lista parcial
   const settings = await storageGet(null);
+
+  // Actualizar caché síncrona para la próxima carga (Zero-Flash)
+  const criticalKeys = ['panelBg', 'panelOpacity', 'panelBlur', 'panelRadius', 'panelTextColor', 'panelTextSecondaryColor', 'accentColor', 'greetingColor', 'nameColor', 'clockColor', 'dateColor', 'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData', 'doodle', 'gradient', 'bgData', 'bgUrl'];
+  const zeroFlashCache = {};
+  criticalKeys.forEach(k => {
+      if (settings[k] !== undefined) zeroFlashCache[k] = settings[k];
+  });
+  localStorage.setItem('zero_flash_cache', JSON.stringify(zeroFlashCache));
   
   await applyCriticalVisuals(settings);
+  document.body.style.display = 'block';
   document.body.classList.remove('loading');
 
   // Escuchar cambios de fondo desde la configuración (evita dependencias circulares)
@@ -138,14 +147,15 @@ export async function updateBackground() {
 
   if (doodle && doodle.id !== 'none' && doodle.template) {
     $('.wrap').style.backgroundColor = 'transparent';
-    document.documentElement.style.background = 'transparent'; // Transparent html
-    document.body.style.background = 'transparent'; // Fix: Make entire body transparent
+    document.documentElement.style.setProperty('background', 'transparent', 'important'); // Overide with important
+    document.body.style.setProperty('background', 'transparent', 'important'); // Overide with important
     const backgroundDoodle = document.createElement('css-doodle');
     backgroundDoodle.innerHTML = doodle.template;
     doodleBgContainer.appendChild(backgroundDoodle);
   } else {
     $('.wrap').style.backgroundColor = '';
-    document.documentElement.style.background = ''; // Restore html
+    document.documentElement.style.removeProperty('background'); // Remove the important override
+    document.body.style.removeProperty('background');
     
     // Restauramos el fondo que corresponda (Premium, Imagen o Degradado)
     if (settings.activePremiumTheme && settings.premiumThemeData) {

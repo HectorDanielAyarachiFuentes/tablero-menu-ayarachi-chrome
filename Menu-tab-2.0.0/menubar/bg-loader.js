@@ -86,8 +86,8 @@ import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
 
     // Prioridad Absoluta: Si hay un doodle, el fondo debe ser transparente para que se vea
     if (settings.doodle && settings.doodle !== 'none') {
-       document.documentElement.style.background = 'transparent';
-       document.body.style.background = 'transparent';
+       document.documentElement.style.setProperty('background', 'transparent', 'important');
+       document.body.style.setProperty('background', 'transparent', 'important');
     }
 
   } catch (error) {

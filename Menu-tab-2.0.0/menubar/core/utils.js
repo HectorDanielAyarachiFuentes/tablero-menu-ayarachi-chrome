@@ -39,47 +39,63 @@ export const storageGet = (keys, useCache = false) => new Promise(resolve => {
 // Se añade un filtro de tamaño para evitar el error "kQuotaBytesPerItem quota exceeded"
 export const storageSet = (obj) => {
   return new Promise(async (resolve) => {
+    // 1. Guardamos en chrome.storage (Async)
     if (window.chrome && chrome.storage) {
-      // 1. Guardamos SIEMPRE en local para acceso rápido e inmediato.
-      // Local no tiene los límites tan estrictos de sync.
+      // Guardamos SIEMPRE en local para acceso rápido e inmediato en el hilo async.
       await new Promise(res => chrome.storage.local.set(obj, res));
 
-      // 2. Intentamos guardar en sync para la sincronización entre dispositivos con DEBOUNCE.
+      // 2. Sincronización con Sync (Debounced)
       if (chrome.storage.sync) {
-        // Acumulamos los cambios en el buffer
         Object.assign(syncBuffer, obj);
-        
-        // Limpiamos el temporizador anterior
         if (syncTimer) clearTimeout(syncTimer);
-        
-        // Creamos un nuevo temporizador (1 segundo de espera)
         syncTimer = setTimeout(() => {
           const syncObj = {};
           for (const key in syncBuffer) {
             const size = JSON.stringify(syncBuffer[key]).length;
-            if (size < 7000) {
-              syncObj[key] = syncBuffer[key];
-            }
+            if (size < 7000) syncObj[key] = syncBuffer[key];
           }
-          
           if (Object.keys(syncObj).length > 0) {
             chrome.storage.sync.set(syncObj, () => {
-              if (chrome.runtime.lastError) {
-                console.warn("Sync quota warning (safe to ignore):", chrome.runtime.lastError.message);
-              }
-              // Limpiar el buffer después de intentar sincronizar
+              if (chrome.runtime.lastError) console.warn("Sync quota warning:", chrome.runtime.lastError.message);
               syncBuffer = {};
             });
           }
           syncTimer = null;
         }, 1000); 
       }
-      resolve();
     } else {
-      // Fallback para cuando no es una extensión (localStorage)
+      // Fallback local storage normal
       Object.keys(obj).forEach(k => localStorage.setItem(k, JSON.stringify(obj[k])));
-      resolve();
     }
+
+    // 3. CACHE CRÍTICA (Sync) - Para eliminar el destello (Zero-Flash)
+    const criticalKeys = [
+      'panelBg', 'panelOpacity', 'panelBlur', 'panelRadius',
+      'panelTextColor', 'panelTextSecondaryColor', 'accentColor',
+      'greetingColor', 'nameColor', 'clockColor', 'dateColor',
+      'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData',
+      'doodle', 'gradient', 'bgData', 'bgUrl'
+    ];
+
+    // Obtenemos la caché actual o creamos una nueva
+    let zeroFlashCache = {};
+    try {
+      const existing = localStorage.getItem('zero_flash_cache');
+      if (existing) zeroFlashCache = JSON.parse(existing);
+    } catch(e) {}
+
+    // Actualizamos solo lo que ha cambiado
+    Object.keys(obj).forEach(key => {
+      if (criticalKeys.includes(key)) {
+        zeroFlashCache[key] = obj[key];
+      }
+    });
+
+    try {
+      localStorage.setItem('zero_flash_cache', JSON.stringify(zeroFlashCache));
+    } catch (e) {}
+
+    resolve();
   });
 };
 
