@@ -54,22 +54,65 @@
     root.setProperty('background-position', 'center', 'important');
   }
 
+  // 3.5. Renderizado instantáneo de textos (Saludo y Reloj)
+  window.addEventListener('DOMContentLoaded', () => {
+    const greetingEl = document.getElementById('header-greeting');
+    const clockEl = document.getElementById('header-clock');
+    const dateEl = document.getElementById('date');
+
+    if (greetingEl && settings.userName) {
+      const hour = new Date().getHours();
+      let greeting = '¡Hola!';
+      if (hour >= 5 && hour < 12) greeting = 'Buenos días';
+      else if (hour >= 12 && hour < 20) greeting = 'Buenas tardes';
+      else greeting = 'Buenas noches';
+      greetingEl.innerHTML = `${greeting}, <strong>${settings.userName}</strong>`;
+    }
+
+    if (clockEl) {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      clockEl.textContent = `${h}:${m}`;
+    }
+
+    if (dateEl) {
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      dateEl.textContent = new Intl.DateTimeFormat('es-ES', options).format(new Date());
+    }
+  });
+
   // 4. Renderizado instantáneo del Doodle (Encima del fondo base)
   if (settings.doodle && settings.doodle !== 'none' && settings.doodleTemplate) {
     const injectDoodle = () => {
       const container = document.getElementById('doodle-background');
-      if (container && window.customElements && customElements.get('css-doodle')) {
-        container.innerHTML = `
-          <css-doodle>
-            ${settings.doodleTemplate}
-            @keyframes reveal-stagger { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-            &, :after, :before { animation: reveal-stagger 0.6s ease forwards !important; animation-delay: @calc(@i * 0.02)s !important; opacity: 0; }
-          </css-doodle>
-        `;
-        container.classList.add('ready');
-      } else {
+      if (!container) {
         setTimeout(injectDoodle, 10);
+        return;
       }
+
+      // Si la librería no está cargada, la cargamos dinámicamente
+      if (!window.customElements || !customElements.get('css-doodle')) {
+        if (!document.getElementById('css-doodle-lib')) {
+          const script = document.createElement('script');
+          script.id = 'css-doodle-lib';
+          script.src = 'doodle/css-doodle.min.js';
+          script.onload = () => injectDoodle(); // Re-intentar al cargar
+          document.head.appendChild(script);
+        } else {
+          setTimeout(injectDoodle, 20); // Esperar a que cargue el script existente
+        }
+        return;
+      }
+
+      container.innerHTML = `
+        <css-doodle>
+          ${settings.doodleTemplate}
+          @keyframes reveal-stagger { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          &, :after, :before { animation: reveal-stagger 0.6s ease forwards !important; animation-delay: @calc(@i * 0.02)s !important; opacity: 0; }
+        </css-doodle>
+      `;
+      container.classList.add('ready');
     };
     injectDoodle();
   }
@@ -80,10 +123,15 @@
   style.innerHTML = '* { transition: none !important; }';
   document.documentElement.appendChild(style);
 
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      const s = document.getElementById('zero-flash-no-trans');
-      if (s) s.remove();
-    }, 500);
-  });
+  // Intentar limpiar las transiciones lo antes posible
+  const cleanTrans = () => {
+    const s = document.getElementById('zero-flash-no-trans');
+    if (s) s.remove();
+  };
+
+  if (document.readyState === 'complete') {
+    setTimeout(cleanTrans, 500);
+  } else {
+    window.addEventListener('load', () => setTimeout(cleanTrans, 500));
+  }
 })();

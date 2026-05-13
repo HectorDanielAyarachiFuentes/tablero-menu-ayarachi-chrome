@@ -1,25 +1,103 @@
-(function() {
-    // 1. Aplicar fondo oscuro inmediato al documentElement (el HTML), que siempre existe
-    const root = document.documentElement;
-    root.style.backgroundColor = '#050505';
-    root.style.color = 'white';
+/**
+ * Fast Loader - Combines Background and Pre-loader logic.
+ * Optimizes startup by doing a single storage fetch for all critical visual elements.
+ */
+(async () => {
+  try {
+    const keys = [
+      'userName', 'use12HourFormat', 'showSeconds', 'greetingPreference', 'customGreetings',
+      'greetingColor', 'nameColor', 'clockColor', 'dateColor',
+      'panelBg', 'panelOpacity', 'panelBlur', 'panelRadius',
+      'panelTextColor', 'panelTextSecondaryColor', 'accentColor',
+      'activePremiumTheme', 'premiumThemeData',
+      'doodle', 'bgData', 'bgUrl', 'gradient', 'bgDisplayMode',
+      'showSearch', 'showWeather', 'showDate'
+    ];
     
-    // 2. Intentar restaurar el último degradado guardado
-    const lastGradient = localStorage.getItem('lastPremiumGradient');
-    if (lastGradient) {
-        root.style.background = lastGradient;
-        root.style.backgroundAttachment = 'fixed';
-        root.style.minHeight = '100vh';
+    const settings = await new Promise(resolve => chrome.storage.local.get(keys, resolve));
+
+    if (!settings) return;
+
+    const rootStyle = document.documentElement.style;
+    const bodyStyle = document.body.style;
+
+    // 1. APLICAR TEMA (Fondo y Paneles)
+    if (settings.activePremiumTheme && settings.premiumThemeData) {
+      const theme = settings.premiumThemeData;
+      bodyStyle.background = theme.background.gradient;
+      document.body.classList.add('theme-background');
+
+      const pt = theme.panel;
+      rootStyle.setProperty('--panel-bg', settings.panelBg || pt.bg);
+      rootStyle.setProperty('--panel-opacity', settings.panelOpacity ?? pt.opacity);
+      rootStyle.setProperty('--panel-blur', `${settings.panelBlur ?? pt.blur}px`);
+      rootStyle.setProperty('--panel-radius', `${settings.panelRadius ?? pt.radius}px`);
+      
+      const colors = theme.colors;
+      rootStyle.setProperty('--panel-text-color', settings.panelTextColor || colors.text);
+      rootStyle.setProperty('--panel-text-secondary-color', settings.panelTextSecondaryColor || colors.textSecondary);
+      rootStyle.setProperty('--accent-color', settings.accentColor || colors.accent);
+      rootStyle.setProperty('--greeting-color', settings.greetingColor || colors.greeting);
+      rootStyle.setProperty('--name-color', settings.nameColor || colors.name);
+      rootStyle.setProperty('--clock-color', settings.clockColor || colors.clock);
+      rootStyle.setProperty('--date-color', settings.dateColor || colors.date);
+    } else if (settings.gradient) {
+        // Fallback simple para degradados (se completará en settings.js)
+        bodyStyle.backgroundImage = settings.gradient;
+    } else if (settings.bgData || settings.bgUrl) {
+        bodyStyle.backgroundImage = `url('${settings.bgData || settings.bgUrl}')`;
+        bodyStyle.backgroundSize = 'cover';
     }
+
+    if (settings.doodle && settings.doodle !== 'none') {
+        rootStyle.setProperty('background', 'transparent', 'important');
+        document.body.style.setProperty('background', 'transparent', 'important');
+    }
+
+    // 2. RENDERIZAR SALUDO, RELOJ Y FECHA
+    const now = new Date();
+    const hour = now.getHours();
     
-    // 3. Para el body, esperamos a que exista de forma segura
-    const observer = new MutationObserver((mutations, obs) => {
-        if (document.body) {
-            document.body.style.backgroundColor = '#050505';
-            document.body.classList.add('loading');
-            obs.disconnect(); // Dejamos de observar una vez aplicado
-        }
-    });
-    
-    observer.observe(root, { childList: true });
+    // Saludo
+    const greetingEl = document.getElementById('header-greeting');
+    if (greetingEl) {
+      let greetingText = '¡Hola!';
+      if (hour >= 5 && hour < 12) greetingText = 'Buenos días';
+      else if (hour >= 12 && hour < 20) greetingText = 'Buenas tardes';
+      else greetingText = 'Buenas noches';
+      
+      const namePart = settings.userName ? `, <strong>${settings.userName}</strong>` : '';
+      greetingEl.innerHTML = `${greetingText}${namePart}`;
+    }
+
+    // Reloj
+    const clockEl = document.getElementById('header-clock');
+    if (clockEl) {
+      let hh = now.getHours();
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      let ampm = '';
+      if (settings.use12HourFormat) {
+        ampm = hh >= 12 ? ' PM' : ' AM';
+        hh = hh % 12 || 12;
+      }
+      let timeStr = settings.use12HourFormat ? `${hh}:${mm}` : `${String(hh).padStart(2, '0')}:${mm}`;
+      if (settings.showSeconds) timeStr += `:${String(now.getSeconds()).padStart(2, '0')}`;
+      clockEl.textContent = timeStr + ampm;
+    }
+
+    // Fecha
+    const dateEl = document.getElementById('date');
+    if (dateEl) {
+      const formattedDate = new Intl.DateTimeFormat('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
+      dateEl.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+    }
+
+    // 3. VISIBILIDAD DE SECCIONES
+    if (settings.showSearch === false) document.querySelector('.search-section')?.setAttribute('hidden', '');
+    if (settings.showWeather === false) document.getElementById('weather')?.setAttribute('hidden', '');
+    if (settings.showDate === false) document.getElementById('date')?.setAttribute('hidden', '');
+
+  } catch (e) {
+    console.error('Fast-loader error:', e);
+  }
 })();

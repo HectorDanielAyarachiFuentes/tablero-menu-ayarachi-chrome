@@ -18,6 +18,12 @@ export let tiles = [];
 export let trash = [];
 let dragTileSrcEl = null;
 
+// Configuración de scroll infinito
+const PAGE_SIZE = 100;
+let loadedCount = 0;
+let intersectionObserver = null;
+let isLoading = false;
+
 export function setTiles(newTiles) {
     tiles = newTiles;
 }
@@ -36,16 +42,41 @@ export function initTiles() {
     tilesEl.addEventListener('drop', handleTileDrop);
     tilesEl.addEventListener('dragend', handleTileDragEnd);
 
-    $('#addTile').addEventListener('click', () => openModal()); // This should already be handled in editor.js or similar
+    $('#addTile').addEventListener('click', () => openModal());
 
     initContextMenu();
     initModal();
     initEditor();
     initNotes();
+
+    // Inicializar observador para scroll infinito
+    initInfiniteScroll();
+
+    // Fallback: Listener de scroll tradicional (por si falla el observador)
+    window.addEventListener('scroll', () => {
+        if (loadedCount > 0 && !isLoading) {
+            const scrollPos = window.innerHeight + window.scrollY;
+            const threshold = document.documentElement.scrollHeight - 600;
+            if (scrollPos > threshold) {
+                loadMoreTiles();
+            }
+        }
+    }, { passive: true });
+}
+
+function initInfiniteScroll() {
+    if (intersectionObserver) intersectionObserver.disconnect();
+
+    intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !isLoading) {
+                loadMoreTiles();
+            }
+        });
+    }, { rootMargin: '400px' });
 }
 
 export function saveAndRender() {
-    // Guardamos en el almacenamiento del navegador y, si está activado, en el archivo local.
     const dataToSave = { tiles, trash };
     storageSet(dataToSave).then(async () => {
         const { autoSync } = await storageGet(['autoSync']);
@@ -57,7 +88,7 @@ export function saveAndRender() {
 
     renderFavoritesInSelect();
     renderTiles();
-    // Limpiamos el campo de búsqueda y renderizamos la lista completa
+    
     const searchInput = $('#editorSearchInput');
     if (searchInput) searchInput.value = '';
     renderEditor();
@@ -70,34 +101,96 @@ export function renderTiles() {
     const tpl = $('#tileTpl');
     if (!tpl) return;
 
+    // Resetear contador de carga
+    loadedCount = 0;
+    isLoading = false;
+    tilesEl.innerHTML = '';
+    
+    // Desconectar observador previo
+    if (intersectionObserver) intersectionObserver.disconnect();
+
+    loadMoreTiles();
+
+    $('#backBtn').hidden = FolderManager.isRootView();
+}
+
+function loadMoreTiles() {
+    if (isLoading) return;
+    
+    const tilesEl = $('#tiles');
+    const tpl = $('#tileTpl');
     const currentTiles = FolderManager.getTilesForCurrentView(tiles);
     const displayableTiles = currentTiles.filter(t => t.type !== 'note');
     
-    // Usamos un fragmento para construir todo en memoria (ULTRA RÁPIDO)
+    if (loadedCount >= displayableTiles.length) {
+        // Ya se cargó todo, asegurar que aparezca el botón "+"
+        ensureAddButton(tilesEl, displayableTiles.length);
+        return;
+    }
+
+    isLoading = true;
+
+    // Asegurar que el observador esté inicializado antes de usarlo
+    if (!intersectionObserver) initInfiniteScroll();
+
+    const nextBatch = displayableTiles.slice(loadedCount, loadedCount + PAGE_SIZE);
     const fragment = document.createDocumentFragment();
 
-    displayableTiles.forEach((t, i) => {
-        const node = FolderManager.renderTile(t, i, tpl, tiles);
-        node.style.setProperty('--animation-delay', `${i * 30}ms`);
+    nextBatch.forEach((t, i) => {
+        const realIndex = loadedCount + i;
+        const node = FolderManager.renderTile(t, realIndex, tpl, tiles);
+        node.style.setProperty('--animation-delay', `${(realIndex % PAGE_SIZE) * 15}ms`);
         fragment.appendChild(node);
     });
 
-    // Botón de añadir
+    // Eliminar botón de añadir y centinela anteriores
+    $('.tile-add')?.remove();
+    const oldSentinel = $('#scroll-sentinel');
+    if (oldSentinel) {
+        intersectionObserver.unobserve(oldSentinel);
+        oldSentinel.remove();
+    }
+
+    tilesEl.appendChild(fragment);
+    loadedCount += nextBatch.length;
+    isLoading = false;
+
+    // Si aún quedan más por cargar, añadir un centinela más robusto
+    if (loadedCount < displayableTiles.length) {
+        const sentinel = document.createElement('div');
+        sentinel.id = 'scroll-sentinel';
+        sentinel.style.gridColumn = '1 / -1';
+        sentinel.style.height = '100px';
+        sentinel.style.width = '100%';
+        sentinel.style.visibility = 'hidden';
+        sentinel.style.pointerEvents = 'none';
+        tilesEl.appendChild(sentinel);
+        
+        intersectionObserver.observe(sentinel);
+
+        // Verificación inmediata
+        requestAnimationFrame(() => {
+            const rect = sentinel.getBoundingClientRect();
+            if (rect.top < window.innerHeight + 400) {
+                loadMoreTiles();
+            }
+        });
+    } else {
+        ensureAddButton(tilesEl, loadedCount);
+    }
+}
+
+function ensureAddButton(container, count) {
+    if ($('.tile-add')) return;
     const addNode = document.createElement('div');
     addNode.className = 'tile tile-add';
+    addNode.style.gridColumn = 'auto'; 
     addNode.innerHTML = `<span>+</span><div>Añadir</div>`;
-    addNode.style.setProperty('--animation-delay', `${displayableTiles.length * 30}ms`);
     addNode.addEventListener('click', (e) => {
         e.preventDefault();
         openModal();
     });
-    fragment.appendChild(addNode);
-
-    // Inyectamos todo de golpe (SOLO UN PINTADO)
-    tilesEl.innerHTML = '';
-    tilesEl.appendChild(fragment);
-
-    $('#backBtn').hidden = FolderManager.isRootView();
+    container.appendChild(addNode);
 }
 
 function handleTileClick(e) {

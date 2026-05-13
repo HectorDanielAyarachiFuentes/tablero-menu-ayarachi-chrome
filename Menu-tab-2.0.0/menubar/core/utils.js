@@ -74,7 +74,8 @@ export const storageSet = (obj) => {
       'panelTextColor', 'panelTextSecondaryColor', 'accentColor',
       'greetingColor', 'nameColor', 'clockColor', 'dateColor',
       'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData',
-      'doodle', 'gradient', 'bgData', 'bgUrl', 'bgColor'
+      'doodle', 'gradient', 'bgData', 'bgUrl', 'bgColor',
+      'userName', 'showSearch', 'showWeather', 'showDate', 'use12HourFormat', 'showSeconds'
     ];
 
     // Obtenemos la caché actual o creamos una nueva

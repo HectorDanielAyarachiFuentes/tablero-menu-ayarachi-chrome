@@ -24,13 +24,24 @@ import { initPremiumThemes } from './settings/themes-premium.js';
 let currentBackgroundValue = '';
 
 async function init() {
-  // 1. CARGA CRÍTICA - Obtenemos TODOS los ajustes, no solo una lista parcial
-  const settings = await storageGet(null);
+  // 1. CARGA CRÍTICA - Obtenemos solo lo visual para el primer pintado
+  const criticalKeys = [
+    'panelBg', 'panelOpacity', 'panelBlur', 'panelRadius', 
+    'panelTextColor', 'panelTextSecondaryColor', 'accentColor', 
+    'greetingColor', 'nameColor', 'clockColor', 'dateColor', 
+    'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData', 
+    'doodle', 'gradient', 'bgData', 'bgUrl', 'bgColor',
+    'userName', 'showSearch', 'showWeather', 'showDate', 'use12HourFormat', 'showSeconds',
+    'tiles', 'trash'
+  ];
+  
+  const settings = await storageGet(criticalKeys);
 
   // Actualizar caché síncrona para la próxima carga (Zero-Flash)
-  const criticalKeys = ['panelBg', 'panelOpacity', 'panelBlur', 'panelRadius', 'panelTextColor', 'panelTextSecondaryColor', 'accentColor', 'greetingColor', 'nameColor', 'clockColor', 'dateColor', 'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData', 'doodle', 'gradient', 'bgData', 'bgUrl', 'bgColor'];
   const zeroFlashCache = {};
   criticalKeys.forEach(k => {
+      // Excluimos datos pesados de la caché síncrona de localStorage
+      if (k === 'tiles' || k === 'trash') return;
       if (settings[k] !== undefined) zeroFlashCache[k] = settings[k];
   });
   
@@ -46,6 +57,14 @@ async function init() {
   localStorage.setItem('zero_flash_cache', JSON.stringify(zeroFlashCache));
   
   await applyCriticalVisuals(settings);
+  
+  // Cargar el resto de los datos (tiles, notes, etc.) lo más rápido posible
+  const fullSettings = await storageGet(null);
+  Object.assign(settings, fullSettings); 
+  
+  // Una vez tenemos los datos reales, volvemos a aplicar lo visual para mostrar los Tiles reales
+  await applyCriticalVisuals(settings);
+
   $('.wrap').style.display = 'block';
   document.body.classList.remove('loading');
 
