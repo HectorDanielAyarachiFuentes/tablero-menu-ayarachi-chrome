@@ -3,8 +3,9 @@
  * Gestiona temas completos que incluyen fondo, paneles y colores de texto
  * Incluye modo automático día/noche basado en la hora del sistema
  */
-import { $, $$, saveAndSyncSetting, storageGet } from '../core/utils.js';
+import { $, $$, saveAndSyncSetting, storageGet, setSVG } from '../core/utils.js';
 import { updatePanelRgb } from './settings-panels.js';
+// BackgroundManager ahora es global
 
 let premiumThemes = [
     {
@@ -20,7 +21,7 @@ let premiumThemes = [
             "opacity": 0.3,
             "blur": 25,
             "radius": 16,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(255, 0, 110, 0.4)",
             "shadowBlur": 40
         },
@@ -51,7 +52,7 @@ let premiumThemes = [
             "opacity": 0.1,
             "blur": 20,
             "radius": 12,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(191, 149, 63, 0.3)",
             "shadowBlur": 35
         },
@@ -82,7 +83,7 @@ let premiumThemes = [
             "opacity": 0.4,
             "blur": 30,
             "radius": 20,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(0, 245, 255, 0.2)",
             "shadowBlur": 40
         },
@@ -113,7 +114,7 @@ let premiumThemes = [
             "opacity": 0.08,
             "blur": 20,
             "radius": 15,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(255, 69, 0, 0.4)",
             "shadowBlur": 45
         },
@@ -144,7 +145,7 @@ let premiumThemes = [
             "opacity": 0.2,
             "blur": 40,
             "radius": 40,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(0, 0, 0, 0.03)",
             "shadowBlur": 30
         },
@@ -175,7 +176,7 @@ let premiumThemes = [
             "opacity": 0.6,
             "blur": 20,
             "radius": 20,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(0, 0, 0, 0.05)",
             "shadowBlur": 20
         },
@@ -206,7 +207,7 @@ let premiumThemes = [
             "opacity": 0.4,
             "blur": 30,
             "radius": 12,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(131, 56, 236, 0.3)",
             "shadowBlur": 50
         },
@@ -237,7 +238,7 @@ let premiumThemes = [
             "opacity": 0.25,
             "blur": 15,
             "radius": 30,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(251, 194, 235, 0.4)",
             "shadowBlur": 30
         },
@@ -268,7 +269,7 @@ let premiumThemes = [
             "opacity": 0.2,
             "blur": 25,
             "radius": 18,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(52, 211, 153, 0.2)",
             "shadowBlur": 35
         },
@@ -299,7 +300,7 @@ let premiumThemes = [
             "opacity": 0.4,
             "blur": 15,
             "radius": 24,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(5, 150, 105, 0.3)",
             "shadowBlur": 30
         },
@@ -326,7 +327,7 @@ let premiumThemes = [
             "opacity": 0.6,
             "blur": 30,
             "radius": 32,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(148, 163, 184, 0.2)",
             "shadowBlur": 25
         },
@@ -353,7 +354,7 @@ let premiumThemes = [
             "opacity": 0.4,
             "blur": 15,
             "radius": 18,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(244, 63, 94, 0.3)",
             "shadowBlur": 35
         },
@@ -380,7 +381,7 @@ let premiumThemes = [
             "opacity": 0.7,
             "blur": 10,
             "radius": 12,
-            "shadowEnabled": true,
+            "shadowEnabled": false,
             "shadowColor": "rgba(168, 162, 158, 0.1)",
             "shadowBlur": 20
         },
@@ -429,74 +430,124 @@ async function syncUIWithSettings() {
 function renderPremiumThemes() {
     const container = document.createElement('div');
     container.className = 'premium-themes-section';
-    container.innerHTML = `
-        <div class="field">
-            <label>Temas Premium</label>
-            <p class="field-description">Temas completos que transforman toda la interfaz</p>
-        </div>
-        <div id="premium-theme-list" class="premium-theme-list"></div>
-        
-        <div class="field field-toggle" style="margin-top: 16px;">
-            <label for="autoThemeToggle">Modo Automático Día/Noche</label>
-            <div class="switch-container">
-                <label class="switch">
-                    <input type="checkbox" id="autoThemeToggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </div>
-        <div id="autoThemeSettings" class="auto-theme-settings" hidden>
-            <div class="field">
-                <label for="dayThemeSelect">Tema de Día (6:00 - 18:00)</label>
-                <select id="dayThemeSelect"></select>
-            </div>
-            <div class="field">
-                <label for="nightThemeSelect">Tema de Noche (18:00 - 6:00)</label>
-                <select id="nightThemeSelect"></select>
-            </div>
-            <div class="auto-mode-status">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-                <span id="autoModeStatusText">Modo automático activado</span>
-            </div>
-        </div>
-    `;
+    
+    const fieldHeader = document.createElement('div');
+    fieldHeader.className = 'field';
+    const labelHeader = document.createElement('label');
+    labelHeader.textContent = 'Temas Premium';
+    const pHeader = document.createElement('p');
+    pHeader.className = 'field-description';
+    pHeader.textContent = 'Temas completos que transforman toda la interfaz';
+    fieldHeader.appendChild(labelHeader);
+    fieldHeader.appendChild(pHeader);
+    container.appendChild(fieldHeader);
+    
+    const themeList = document.createElement('div');
+    themeList.id = 'premium-theme-list';
+    themeList.className = 'premium-theme-list';
+    container.appendChild(themeList);
+    
+    const autoModeField = document.createElement('div');
+    autoModeField.className = 'field field-toggle';
+    autoModeField.style.marginTop = '16px';
+    const autoModeLabel = document.createElement('label');
+    autoModeLabel.setAttribute('for', 'autoThemeToggle');
+    autoModeLabel.textContent = 'Modo Automático Día/Noche';
+    const switchContainer = document.createElement('div');
+    switchContainer.className = 'switch-container';
+    const switchLabel = document.createElement('label');
+    switchLabel.className = 'switch';
+    const switchInput = document.createElement('input');
+    switchInput.type = 'checkbox';
+    switchInput.id = 'autoThemeToggle';
+    const switchSlider = document.createElement('span');
+    switchSlider.className = 'slider round';
+    switchLabel.appendChild(switchInput);
+    switchLabel.appendChild(switchSlider);
+    switchContainer.appendChild(switchLabel);
+    autoModeField.appendChild(autoModeLabel);
+    autoModeField.appendChild(switchContainer);
+    container.appendChild(autoModeField);
+
+    const autoThemeSettings = document.createElement('div');
+    autoThemeSettings.id = 'autoThemeSettings';
+    autoThemeSettings.className = 'auto-theme-settings';
+    autoThemeSettings.hidden = true;
+    
+    const createField = (labelStr, selectId) => {
+        const f = document.createElement('div');
+        f.className = 'field';
+        const l = document.createElement('label');
+        l.setAttribute('for', selectId);
+        l.textContent = labelStr;
+        const s = document.createElement('select');
+        s.id = selectId;
+        f.appendChild(l);
+        f.appendChild(s);
+        return f;
+    };
+    
+    autoThemeSettings.appendChild(createField('Tema de Día (6:00 - 18:00)', 'dayThemeSelect'));
+    autoThemeSettings.appendChild(createField('Tema de Noche (18:00 - 6:00)', 'nightThemeSelect'));
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'auto-mode-status';
+    
+    const svgIconContainer = document.createElement('span');
+    setSVG(svgIconContainer, '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>');
+    statusDiv.appendChild(svgIconContainer);
+    
+    const statusSpan = document.createElement('span');
+    statusSpan.id = 'autoModeStatusText';
+    statusSpan.textContent = 'Modo automático activado';
+    statusDiv.appendChild(statusSpan);
+    autoThemeSettings.appendChild(statusDiv);
+    container.appendChild(autoThemeSettings);
 
     const gradientSection = $('#subtab-degradados');
     if (gradientSection) {
         gradientSection.insertBefore(container, gradientSection.firstChild);
     }
 
-    const themeList = $('#premium-theme-list');
     premiumThemes.forEach(theme => {
         const btn = document.createElement('button');
         btn.className = 'premium-theme-btn';
         btn.dataset.themeId = theme.id;
-        btn.innerHTML = `
-            <div class="premium-theme-preview" style="background: ${theme.background.gradient}">
-                <div class="premium-theme-panel-preview" style="
-                    background-color: rgba(${theme.panel.bgRgb}, ${theme.panel.opacity});
-                    backdrop-filter: blur(${theme.panel.blur}px);
-                    border-radius: ${theme.panel.radius}px;
-                    padding: 8px;
-                ">
-                    <div class="premium-theme-text" style="color: ${theme.colors.text}">Aa</div>
-                </div>
-            </div>
-            <div class="premium-theme-info">
-                <span class="premium-theme-name">${theme.name}</span>
-                <span class="premium-theme-desc">${theme.description}</span>
-            </div>
-        `;
+        
+        const preview = document.createElement('div');
+        preview.className = 'premium-theme-preview';
+        preview.style.background = theme.background.gradient;
+        
+        const panelPreview = document.createElement('div');
+        panelPreview.className = 'premium-theme-panel-preview';
+        panelPreview.style.backgroundColor = `rgba(${theme.panel.bgRgb}, ${theme.panel.opacity})`;
+        panelPreview.style.backdropFilter = `blur(${theme.panel.blur}px)`;
+        panelPreview.style.borderRadius = `${theme.panel.radius}px`;
+        panelPreview.style.padding = '8px';
+        
+        const textPreview = document.createElement('div');
+        textPreview.className = 'premium-theme-text';
+        textPreview.style.color = theme.colors.text;
+        textPreview.textContent = 'Aa';
+        
+        panelPreview.appendChild(textPreview);
+        preview.appendChild(panelPreview);
+        
+        const info = document.createElement('div');
+        info.className = 'premium-theme-info';
+        const name = document.createElement('span');
+        name.className = 'premium-theme-name';
+        name.textContent = theme.name;
+        const desc = document.createElement('span');
+        desc.className = 'premium-theme-desc';
+        desc.textContent = theme.description;
+        
+        info.appendChild(name);
+        info.appendChild(desc);
+        
+        btn.appendChild(preview);
+        btn.appendChild(info);
+        
         btn.addEventListener('click', () => applyPremiumTheme(theme.id));
         themeList.appendChild(btn);
     });
@@ -546,35 +597,14 @@ export async function applyPremiumTheme(themeId, skipSave = false) {
     const theme = premiumThemes.find(t => t.id === themeId);
     if (!theme) return;
 
-    document.body.style.background = theme.background.gradient;
-    document.body.classList.add('theme-background');
-
-    const panel = theme.panel;
-    document.documentElement.style.setProperty('--panel-bg', panel.bg);
-    document.documentElement.style.setProperty('--panel-bg-rgb', panel.bgRgb);
-    document.documentElement.style.setProperty('--panel-opacity', panel.opacity);
-    document.documentElement.style.setProperty('--panel-blur', `${panel.blur}px`);
-    document.documentElement.style.setProperty('--panel-radius', `${panel.radius}px`);
-
-    if (panel.shadowEnabled) {
-        document.documentElement.style.setProperty('--panel-shadow', `0 5px ${panel.shadowBlur}px ${panel.shadowColor}`);
-    } else {
-        document.documentElement.style.setProperty('--panel-shadow', 'none');
-    }
-
-    const colors = theme.colors;
-    document.documentElement.style.setProperty('--panel-text-color', colors.text);
-    document.documentElement.style.setProperty('--panel-text-secondary-color', colors.textSecondary);
-    document.documentElement.style.setProperty('--accent-color', colors.accent);
-    document.documentElement.style.setProperty('--greeting-color', colors.greeting);
-    document.documentElement.style.setProperty('--name-color', colors.name);
-    document.documentElement.style.setProperty('--clock-color', colors.clock);
-    document.documentElement.style.setProperty('--date-color', colors.date);
-
-    if (theme.fonts) {
-        document.documentElement.style.setProperty('--greeting-font', theme.fonts.main);
-        document.documentElement.style.setProperty('--date-font', theme.fonts.secondary);
-    }
+    // Aplicación centralizada a través del BackgroundManager
+    BackgroundManager.apply({
+        activePremiumTheme: themeId,
+        premiumThemeData: theme,
+        ...theme.background,
+        ...theme.colors,
+        ...theme.fonts
+    });
 
     updateThemeControls(theme);
     updateActivePremiumTheme(themeId);
@@ -583,8 +613,9 @@ export async function applyPremiumTheme(themeId, skipSave = false) {
         await saveAndSyncSetting({
             activePremiumTheme: themeId,
             premiumThemeData: theme,
+            gradient: theme.background.gradient,
             bgType: 'premium',
-            selectedGradient: theme.background.gradient,
+            syncFirefoxTheme: false,
             // Guardamos los valores individuales para que el usuario pueda "editarlos" y que persistan
             panelBg: theme.panel.bg,
             panelOpacity: theme.panel.opacity,
@@ -601,6 +632,8 @@ export async function applyPremiumTheme(themeId, skipSave = false) {
             // Eliminamos doodle: 'none' para permitir persistencia si el usuario añade uno después
         });
         localStorage.setItem('lastPremiumGradient', theme.background.gradient);
+        const syncToggle = $('#syncFirefoxThemeToggle');
+        if (syncToggle) syncToggle.checked = false;
     }
 }
 

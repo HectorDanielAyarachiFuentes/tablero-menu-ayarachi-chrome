@@ -39,3 +39,12 @@ chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
   });
   console.log('Nuevo acceso guardado y mensaje de actualización enviado.');
 });
+
+/**
+ * Escucha peticiones de las pestañas de la extensión para acceder a APIs restringidas.
+ */
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'GET_FIREFOX_THEME') {
+    sendResponse({ success: false, error: 'La API de temas de Firefox no está disponible en Chrome' });
+  }
+});

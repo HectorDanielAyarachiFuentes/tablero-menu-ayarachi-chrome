@@ -1,60 +1,66 @@
-(function() {
+(function () {
   // 1. Obtener toda la configuración de un solo golpe
   let settings = {};
   try {
     const cache = localStorage.getItem('zero_flash_cache');
     if (cache) settings = JSON.parse(cache);
-  } catch(e) { return; }
+  } catch (e) { return; }
 
   const root = document.documentElement.style;
 
-  // 2. Aplicar variables de color y fuente (Siempre)
-  if (settings.premiumThemeData) {
-    const theme = settings.premiumThemeData;
-    const panel = theme.panel;
-    const colors = theme.colors;
-    root.setProperty('--panel-bg', settings.panelBg || panel.bg);
-    root.setProperty('--panel-opacity', settings.panelOpacity ?? panel.opacity);
-    root.setProperty('--panel-blur', (settings.panelBlur ?? panel.blur) + 'px');
-    root.setProperty('--panel-radius', (settings.panelRadius ?? panel.radius) + 'px');
-    root.setProperty('--panel-text-color', settings.panelTextColor || colors.text);
-    root.setProperty('--panel-text-secondary-color', settings.panelTextSecondaryColor || colors.textSecondary);
-    root.setProperty('--accent-color', settings.accentColor || colors.accent);
-    root.setProperty('--greeting-color', settings.greetingColor || colors.greeting);
-    root.setProperty('--name-color', settings.nameColor || colors.name);
-    root.setProperty('--clock-color', settings.clockColor || colors.clock);
-    root.setProperty('--date-color', settings.dateColor || colors.date);
-    root.setProperty('--greeting-font', settings.greetingFont || (theme.fonts ? theme.fonts.main : "'Poppins', sans-serif"));
-    root.setProperty('--date-font', settings.dateFont || (theme.fonts ? theme.fonts.secondary : "'Poppins', sans-serif"));
+  // 2. Aplicar TODO lo visual a través del BackgroundManager tan pronto como el DOM esté listo
+  if (window.BackgroundManager) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        BackgroundManager.apply(settings);
+      });
+    } else {
+      BackgroundManager.apply(settings);
+    }
   }
 
-  // 3. DETERMINAR FONDO BASE (Jerarquía de prioridad para evitar flash negro)
-  let baseBg = '#050505'; 
-  let isImage = false;
-
-  if (settings.activePremiumTheme && settings.premiumThemeData) {
-    baseBg = settings.premiumThemeData.background.gradient;
-  } else if (settings.gradient) {
-    baseBg = settings.gradient;
-  } else if (settings.bgData || settings.bgUrl) {
-    baseBg = 'url(' + (settings.bgData || settings.bgUrl) + ')';
-    isImage = true;
-  } else if (settings.bgColor) {
-    // AÑADIDO: Soporte para color sólido (Verde, Violeta, etc.)
-    baseBg = settings.bgColor;
-  } else if (settings.doodleColor) {
-    baseBg = settings.doodleColor;
+  // 3. Forzar que el body mantenga el fondo aplicado por instant-bg.js
+  // Esto previene que el CSS externo sobrescriba el fondo durante la carga
+  const lastBg = localStorage.getItem('last_bg');
+  const lastColor = localStorage.getItem('last_bg_color');
+  if (document.body) {
+    document.body.style.setProperty('background', 'transparent', 'important');
   }
 
-  // Aplicar el fondo base al HTML inmediatamente
-  root.setProperty('background', baseBg, 'important');
-  root.setProperty('background-attachment', 'fixed', 'important');
-  root.setProperty('background-size', 'cover', 'important');
-  if (isImage) {
-    root.setProperty('background-position', 'center', 'important');
+  // 3.5 Ocultar elementos deshabilitados y asegurar BODY transparente INMEDIATAMENTE vía CSS
+  const hideStyles = [
+    'body { background: transparent !important; }'
+  ];
+  if (settings.showSearch === false) hideStyles.push('.search-section { display: none !important; }');
+  if (settings.showWeather === false) hideStyles.push('#weather { display: none !important; }');
+  if (settings.showDate === false) hideStyles.push('.top-content { display: none !important; }');
+  
+  if (hideStyles.length > 0) {
+    const styleHider = document.createElement('style');
+    styleHider.id = 'zero-flash-hider';
+    styleHider.textContent = hideStyles.join('\n');
+    document.documentElement.appendChild(styleHider);
   }
 
-  // 3.5. Renderizado instantáneo de textos (Saludo y Reloj)
+  // 3. Restauración instantánea de Tiles (HTML Snapshot)
+  // Esto hace que los iconos aparezcan antes de que el motor de la extensión se inicie
+  const tilesSnapshot = localStorage.getItem('tiles_snapshot');
+  if (tilesSnapshot) {
+    window.addEventListener('DOMContentLoaded', () => {
+      const tilesContainer = document.getElementById('tiles');
+      if (tilesContainer && !tilesContainer.hasChildNodes()) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(tilesSnapshot, 'text/html');
+        const fragment = document.createDocumentFragment();
+        while (doc.body.firstChild) {
+          fragment.appendChild(doc.body.firstChild);
+        }
+        tilesContainer.appendChild(fragment);
+      }
+    });
+  }
+
+  // 4. Renderizado instantáneo de textos (Saludo y Reloj)
   window.addEventListener('DOMContentLoaded', () => {
     const greetingEl = document.getElementById('header-greeting');
     const clockEl = document.getElementById('header-clock');
@@ -66,7 +72,10 @@
       if (hour >= 5 && hour < 12) greeting = 'Buenos días';
       else if (hour >= 12 && hour < 20) greeting = 'Buenas tardes';
       else greeting = 'Buenas noches';
-      greetingEl.innerHTML = `${greeting}, <strong>${settings.userName}</strong>`;
+      greetingEl.textContent = greeting;
+      const strong = document.createElement('strong');
+      strong.textContent = `, ${settings.userName}`;
+      greetingEl.appendChild(strong);
     }
 
     if (clockEl) {
@@ -80,6 +89,9 @@
       const options = { weekday: 'long', day: 'numeric', month: 'long' };
       dateEl.textContent = new Intl.DateTimeFormat('es-ES', options).format(new Date());
     }
+
+    const yearEl = document.getElementById('footer-year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
   });
 
   // 4. Renderizado instantáneo del Doodle (Encima del fondo base)
@@ -91,39 +103,42 @@
         return;
       }
 
-      // Si la librería no está cargada, la cargamos dinámicamente
       if (!window.customElements || !customElements.get('css-doodle')) {
         if (!document.getElementById('css-doodle-lib')) {
           const script = document.createElement('script');
           script.id = 'css-doodle-lib';
           script.src = 'doodle/css-doodle.min.js';
-          script.onload = () => injectDoodle(); // Re-intentar al cargar
+          script.onload = () => injectDoodle();
           document.head.appendChild(script);
         } else {
-          setTimeout(injectDoodle, 20); // Esperar a que cargue el script existente
+          setTimeout(injectDoodle, 20);
         }
         return;
       }
 
-      container.innerHTML = `
-        <css-doodle>
+      const doodle = document.createElement('css-doodle');
+      doodle.textContent = `
           ${settings.doodleTemplate}
           @keyframes reveal-stagger { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
           &, :after, :before { animation: reveal-stagger 0.6s ease forwards !important; animation-delay: @calc(@i * 0.02)s !important; opacity: 0; }
-        </css-doodle>
       `;
+      container.textContent = '';
+      container.appendChild(doodle);
       container.classList.add('ready');
     };
     injectDoodle();
   }
 
-  // 5. Bloquear transiciones iniciales
+  // 5. Bloquear transiciones iniciales, excepto para la capa de fondo, doodles y efectos del body
   const style = document.createElement('style');
   style.id = 'zero-flash-no-trans';
-  style.innerHTML = '* { transition: none !important; }';
+  style.textContent = `
+    *:not(#bg-layer):not(body):not(#doodle-background):not(css-doodle) {
+      transition: none !important;
+    }
+  `;
   document.documentElement.appendChild(style);
 
-  // Intentar limpiar las transiciones lo antes posible
   const cleanTrans = () => {
     const s = document.getElementById('zero-flash-no-trans');
     if (s) s.remove();

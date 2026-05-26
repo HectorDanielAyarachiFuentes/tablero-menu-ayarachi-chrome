@@ -2,7 +2,7 @@
  * Gestiona el modal para crear y editar accesos y notas.
  * Se encarga de abrir, cerrar, rellenar los datos y guardar los cambios del modal.
  */
-import { $, $$, storageSet, storageGet } from '../core/utils.js';
+import { $, $$, storageSet, storageGet, setHTML } from '../core/utils.js';
 import { tiles, saveAndRender } from '../core/tiles.js';
 import { FolderManager } from '../core/carpetas.js';
 import { DOMPurify } from '../lib/lib.js';
@@ -78,7 +78,8 @@ export function openModal(index = null, forceType = null) {
             }
         } else if (tile.type === 'note') {
             $('#modalContentGroup').hidden = false;
-            $('#modalContent').innerHTML = tile.content || '';
+            const contentEl = $('#modalContent');
+            setHTML(contentEl, DOMPurify.sanitize(tile.content || ''));
         } else if (tile.type === 'folder') {
             // No hay campos adicionales para una carpeta, solo el nombre.
             // El modal ya muestra el nombre por defecto.
@@ -87,7 +88,7 @@ export function openModal(index = null, forceType = null) {
     } else {
         $('#modalName').value = '';
         $('#modalUrl').value = '';
-        $('#modalContent').innerHTML = '';
+        $('#modalContent').textContent = '';
         updateIconPreview('', false);
 
         if (type === 'note') {
@@ -251,7 +252,10 @@ function handleModalKeydown(e) {
 }
 
 function escapeHTML(str) {
-    const p = document.createElement('p');
-    p.textContent = str;
-    return p.innerHTML;
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

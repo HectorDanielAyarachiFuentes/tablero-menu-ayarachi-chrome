@@ -10,9 +10,63 @@ import { showSaveStatus } from '../components/ui.js';
 export const $ = s => document.querySelector(s);
 export const $$ = s => Array.from(document.querySelectorAll(s));
 
+/**
+ * Limpia el contenido de un elemento de forma segura.
+ */
+export const clearHTML = (el) => {
+  if (!el) return;
+  while (el.firstChild) el.removeChild(el.firstChild);
+};
+
+export const setHTML = (el, html) => {
+  if (!el) return;
+  clearHTML(el);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  // Usamos un fragmento para mover los elementos de forma segura
+  const fragment = document.createDocumentFragment();
+  while (doc.body.firstChild) {
+    fragment.appendChild(doc.body.firstChild);
+  }
+  el.appendChild(fragment);
+};
+
+/**
+ * Crea un elemento SVG a partir de una cadena y lo inserta en el contenedor.
+ * Evita el uso directo de innerHTML en elementos del DOM activos.
+ */
+export const setSVG = (el, svgString) => {
+  if (!el) return;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svgElement = doc.documentElement;
+  
+  clearHTML(el);
+  // Importar el nodo al documento actual
+  const importedNode = document.importNode(svgElement, true);
+  el.appendChild(importedNode);
+};
+
 let saveDebounceTimer;
 let syncBuffer = {};
 let syncTimer = null;
+
+/**
+ * Throttle function to limit how often a function can execute.
+ * Uses requestAnimationFrame for optimal performance with DOM/layout operations.
+ */
+export const throttle = (callback, limit) => {
+    let waiting = false;
+    return function() {
+        if (!waiting) {
+            callback.apply(this, arguments);
+            waiting = true;
+            setTimeout(() => {
+                waiting = false;
+            }, limit);
+        }
+    }
+};
 
 // storage helpers supporting chrome.storage.sync or fallback to localStorage
 export const storageGet = (keys, useCache = false) => new Promise(resolve => {
@@ -75,7 +129,8 @@ export const storageSet = (obj) => {
       'greetingColor', 'nameColor', 'clockColor', 'dateColor',
       'greetingFont', 'dateFont', 'activePremiumTheme', 'premiumThemeData',
       'doodle', 'gradient', 'bgData', 'bgUrl', 'bgColor',
-      'userName', 'showSearch', 'showWeather', 'showDate', 'use12HourFormat', 'showSeconds'
+      'userName', 'showSearch', 'showWeather', 'showDate', 'use12HourFormat', 'showSeconds',
+      'syncFirefoxTheme'
     ];
 
     // Obtenemos la caché actual o creamos una nueva

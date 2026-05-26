@@ -126,13 +126,35 @@ export function renderEditor() {
 
     const tilesToRender = findTilesRecursive(tiles);
 
-    editor.innerHTML = ''; // Limpiar la lista actual
+    editor.textContent = ''; // Limpiar la lista actual
     tilesToRender.forEach((t) => {
         const row = document.createElement('div');
         row.className = 'row';
         row.draggable = false; // Deshabilitamos el drag-and-drop en los resultados de búsqueda para evitar complejidad
-        row.innerHTML = `<span class="e-path">${t.displayPath}</span><input class="e-name" value="${t.name}"/><input class="e-url" value="${t.url || ''}" ${t.type === 'folder' ? 'disabled' : ''}/><button class="e-save btn">Guardar</button>`;
-        row.querySelector('.e-save').addEventListener('click', () => handleEditorSave(t.originalItemRef, row));
+        
+        const pathSpan = document.createElement('span');
+        pathSpan.className = 'e-path';
+        pathSpan.textContent = t.displayPath;
+        
+        const nameInput = document.createElement('input');
+        nameInput.className = 'e-name';
+        nameInput.value = t.name;
+        
+        const urlInput = document.createElement('input');
+        urlInput.className = 'e-url';
+        urlInput.value = t.url || '';
+        if (t.type === 'folder') urlInput.disabled = true;
+        
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'e-save btn';
+        saveBtn.textContent = 'Guardar';
+        saveBtn.addEventListener('click', () => handleEditorSave(t.originalItemRef, row));
+
+        row.appendChild(pathSpan);
+        row.appendChild(nameInput);
+        row.appendChild(urlInput);
+        row.appendChild(saveBtn);
+        
         editor.appendChild(row);
     });
 }

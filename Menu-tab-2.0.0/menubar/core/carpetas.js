@@ -6,6 +6,47 @@ import { renderTiles, saveAndRender } from './tiles.js';
 
 let viewPath = []; // Private state for folder path
 
+// Helper para generar un icono con la letra inicial o cargar el SVG
+function getDynamicFallbackIcon(text) {
+    const letter = (text || '?').charAt(0).toUpperCase();
+
+    // Si la letra es del abecedario A-Z, cargamos tu SVG desde la carpeta abecedario
+    if (/^[A-Z]$/.test(letter)) {
+        return chrome.runtime.getURL(`abecedario/${letter.toLowerCase()}.svg`);
+    }
+
+    // Para números o símbolos, seguimos usando el Canvas como respaldo
+    const colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
+        '#D4A5A5', '#9B59B6', '#3498DB', '#1ABC9C', '#F1C40F',
+        '#E67E22', '#E74C3C', '#2ECC71', '#F39C12', '#8E44AD'
+    ];
+    const charCode = letter.charCodeAt(0) || 0;
+    const colorIndex = charCode % colors.length;
+    const bgColor = colors[colorIndex];
+    
+    // Creamos un Canvas en lugar de un SVG para evitar errores de seguridad en extensiones Firefox
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    
+    // Fondo redondeado
+    ctx.fillStyle = bgColor;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, 64, 64, 12);
+    ctx.fill();
+    
+    // Texto
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, 32, 32 + 2); // +2 para alinear visualmente mejor
+    
+    return canvas.toDataURL('image/png');
+}
+
 export const FolderManager = {
 
     // Gets the array of tiles for the current folder view
@@ -55,37 +96,68 @@ export const FolderManager = {
                     linkNode.setAttribute(attr.name, attr.value);
                 }
             }
-            linkNode.innerHTML = node.innerHTML;
+            while (node.firstChild) {
+                linkNode.appendChild(node.firstChild);
+            }
             node = linkNode;
 
-            const FALLBACK_ICON = 'images/Dulce-flamenco.png';
+            const fallbackText = tile.name || (tile.url ? new URL(tile.url).hostname.replace('www.', '') : '?');
+            const FALLBACK_ICON = getDynamicFallbackIcon(fallbackText);
+            const thumbEl = node.querySelector('.thumb');
+
+            // Establecer el texto de la URL
             try {
                 const url = new URL(tile.url);
                 node.querySelector('.url').textContent = url.hostname.replace('www.', '');
-                const thumbEl = node.querySelector('.thumb');
-                thumbEl.onerror = function () { this.onerror = null; this.src = FALLBACK_ICON; };
-                if (url.hostname && url.hostname.includes('.') && url.protocol.startsWith('http')) {
-                    thumbEl.src = `https://www.google.com/s2/favicons?sz=64&domain=${url.hostname}`;
-                    thumbEl.onload = function () {
-                        // Google returns a 16×16 generic globe for unknown domains — show Dulce instead
-                        if (this.naturalWidth <= 16 && this.naturalHeight <= 16) {
-                            this.onload = null;
-                            this.src = FALLBACK_ICON;
-                        }
-                    };
-                } else {
-                    thumbEl.src = FALLBACK_ICON;
-                }
             } catch (e) {
                 node.querySelector('.url').textContent = tile.url;
-                const thumbEl = node.querySelector('.thumb');
-                thumbEl.onerror = function () { this.onerror = null; this.src = FALLBACK_ICON; };
-                thumbEl.src = FALLBACK_ICON;
             }
 
-            // Use custom icon if it exists, overwriting the default favicon
+            // Listener de error
+            thumbEl.onerror = function() {
+                if (!this.dataset.fallbackLoaded) {
+                    this.dataset.fallbackLoaded = 'true';
+                    this.src = FALLBACK_ICON;
+                }
+            };
+
+            // Lógica de carga de imagen
             if (tile.customIcon) {
-                node.querySelector('.thumb').src = tile.customIcon;
+                thumbEl.src = tile.customIcon;
+            } else {
+                try {
+                    const url = new URL(tile.url);
+                    if (url.hostname && url.hostname.includes('.') && url.protocol.startsWith('http')) {
+                        const targetSrc = `https://www.google.com/s2/favicons?sz=64&domain=${url.hostname}`;
+                        
+                        // Mostramos el favicon temporalmente
+                        thumbEl.src = targetSrc;
+                        
+                        // Usamos un cargador de imagen en segundo plano para revisar el tamaño real de forma segura
+                        const imgLoader = new Image();
+                        // Prevenimos que Firefox recolecte la variable imgLoader antes de que termine
+                        thumbEl._imgLoader = imgLoader;
+                        
+                        imgLoader.onload = function() {
+                            if (imgLoader.naturalWidth <= 16 && imgLoader.naturalHeight <= 16) {
+                                thumbEl.dataset.fallbackLoaded = 'true';
+                                thumbEl.src = FALLBACK_ICON;
+                            }
+                        };
+                        imgLoader.onerror = function() {
+                            thumbEl.dataset.fallbackLoaded = 'true';
+                            thumbEl.src = FALLBACK_ICON;
+                        };
+                        imgLoader.src = targetSrc;
+                        
+                    } else {
+                        thumbEl.dataset.fallbackLoaded = 'true';
+                        thumbEl.src = FALLBACK_ICON;
+                    }
+                } catch (e) {
+                    thumbEl.dataset.fallbackLoaded = 'true';
+                    thumbEl.src = FALLBACK_ICON;
+                }
             }
         }
 

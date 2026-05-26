@@ -3,7 +3,7 @@
  * Se encarga del estado principal (tiles, trash), la renderización de la cuadrícula,
  * y la lógica de arrastrar y soltar (drag and drop) en la vista principal.
  */
-import { $, $$, storageSet, storageGet } from './utils.js';
+import { $, $$, storageSet, storageGet, throttle } from './utils.js';
 import { FolderManager } from './carpetas.js';
 import { renderFavoritesInSelect } from '../../utils/search.js';
 import { showSaveStatus } from '../components/ui.js';
@@ -42,6 +42,34 @@ export function initTiles() {
     tilesEl.addEventListener('drop', handleTileDrop);
     tilesEl.addEventListener('dragend', handleTileDragEnd);
 
+    // Retraer el clima al pasar el mouse por encima de cualquier acceso directo que choque con él
+    // Se usa 'throttle' para limitar los cálculos de colisión (reflows por getBoundingClientRect)
+    tilesEl.addEventListener('mouseover', throttle((e) => {
+        const tile = e.target.closest('.tile');
+        if (tile) {
+            const weatherEl = $('#weather');
+            if (weatherEl && (weatherEl.classList.contains('open') || weatherEl.matches(':hover'))) {
+                const tileRect = tile.getBoundingClientRect();
+                const weatherRect = weatherEl.getBoundingClientRect();
+                
+                // Comprobar colisión geométrica real entre la tarjeta del clima y el acceso
+                const collides = !(tileRect.right < weatherRect.left || 
+                                   tileRect.left > weatherRect.right || 
+                                   tileRect.bottom < weatherRect.top || 
+                                   tileRect.top > weatherRect.bottom);
+                                   
+                if (collides) {
+                    weatherEl.classList.remove('open');
+                    // Desactivar puntero temporalmente para romper el estado CSS :hover del clima
+                    weatherEl.style.pointerEvents = 'none';
+                    setTimeout(() => {
+                        weatherEl.style.pointerEvents = '';
+                    }, 800);
+                }
+            }
+        }
+    }, 100));
+
     $('#addTile').addEventListener('click', () => openModal());
 
     initContextMenu();
@@ -52,8 +80,8 @@ export function initTiles() {
     // Inicializar observador para scroll infinito
     initInfiniteScroll();
 
-    // Fallback: Listener de scroll tradicional (por si falla el observador)
-    window.addEventListener('scroll', () => {
+    // Fallback: Listener de scroll tradicional (por si falla el observador), optimizado
+    window.addEventListener('scroll', throttle(() => {
         if (loadedCount > 0 && !isLoading) {
             const scrollPos = window.innerHeight + window.scrollY;
             const threshold = document.documentElement.scrollHeight - 600;
@@ -61,7 +89,7 @@ export function initTiles() {
                 loadMoreTiles();
             }
         }
-    }, { passive: true });
+    }, 150), { passive: true });
 }
 
 function initInfiniteScroll() {
@@ -104,7 +132,8 @@ export function renderTiles() {
     // Resetear contador de carga
     loadedCount = 0;
     isLoading = false;
-    tilesEl.innerHTML = '';
+    // Ya no limpiamos aquí para evitar parpadeo (lo hace loadMoreTiles de forma atómica)
+    // tilesEl.textContent = '';
     
     // Desconectar observador previo
     if (intersectionObserver) intersectionObserver.disconnect();
@@ -139,7 +168,16 @@ function loadMoreTiles() {
     nextBatch.forEach((t, i) => {
         const realIndex = loadedCount + i;
         const node = FolderManager.renderTile(t, realIndex, tpl, tiles);
-        node.style.setProperty('--animation-delay', `${(realIndex % PAGE_SIZE) * 15}ms`);
+        
+        // Si es la primera carga (intercambio con snapshot), desactivamos la animación
+        // para que no haya parpadeo al aparecer sobre la "foto" previa.
+        if (loadedCount === 0) {
+            node.style.animation = 'none';
+            node.style.opacity = '1';
+        } else {
+            node.style.setProperty('--animation-delay', `${(realIndex % PAGE_SIZE) * 15}ms`);
+        }
+        
         fragment.appendChild(node);
     });
 
@@ -151,7 +189,36 @@ function loadMoreTiles() {
         oldSentinel.remove();
     }
 
-    tilesEl.appendChild(fragment);
+    // INTERCAMBIO INTELIGENTE: Para evitar el parpadeo de "recarga", si es la primera carga y
+    // el snapshot es igual a los datos reales, no destruimos el DOM.
+    if (loadedCount === 0) {
+        const currentTileNodes = Array.from(tilesEl.children).filter(n => n.classList.contains('tile') && !n.classList.contains('tile-add'));
+        let isIdentical = false;
+        
+        if (currentTileNodes.length === nextBatch.length) {
+            isIdentical = currentTileNodes.every((node, i) => {
+                const titleEl = node.querySelector('.title');
+                return titleEl && titleEl.textContent === nextBatch[i].name;
+            });
+        }
+        
+        if (isIdentical) {
+            // Actualizar índices por seguridad pero no reemplazar los elementos del DOM
+            currentTileNodes.forEach((node, i) => {
+                node.dataset.idx = loadedCount + i;
+            });
+        } else {
+            tilesEl.replaceChildren(fragment);
+        }
+    } else {
+        tilesEl.appendChild(fragment);
+    }
+    
+    // GUARDAR SNAPSHOT: Capturar el estado actual tras añadir nuevos tiles
+    if (FolderManager.isRootView()) {
+        localStorage.setItem('tiles_snapshot', tilesEl.innerHTML);
+    }
+
     loadedCount += nextBatch.length;
     isLoading = false;
 
@@ -185,12 +252,25 @@ function ensureAddButton(container, count) {
     const addNode = document.createElement('div');
     addNode.className = 'tile tile-add';
     addNode.style.gridColumn = 'auto'; 
-    addNode.innerHTML = `<span>+</span><div>Añadir</div>`;
+    
+    const span = document.createElement('span');
+    span.textContent = '+';
+    const textDiv = document.createElement('div');
+    textDiv.textContent = 'Añadir';
+    
+    addNode.appendChild(span);
+    addNode.appendChild(textDiv);
+    
     addNode.addEventListener('click', (e) => {
         e.preventDefault();
         openModal();
     });
     container.appendChild(addNode);
+    
+    // GUARDAR SNAPSHOT: Capturar el estado actual para carga instantánea
+    if (FolderManager.isRootView()) {
+        localStorage.setItem('tiles_snapshot', container.innerHTML);
+    }
 }
 
 function handleTileClick(e) {

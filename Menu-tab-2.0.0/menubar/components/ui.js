@@ -15,7 +15,6 @@ import { initDoodleSettings } from '../settings/doodles.js';
 
 export function initUI() {
     updateClock();
-    setInterval(updateClock, 1000);
 
     $('#openSettings').addEventListener('click', () => toggleSettings(true));
     $('#closeSettings').addEventListener('click', () => toggleSettings(false));
@@ -123,10 +122,21 @@ export async function renderGreeting(name) {
         greetingText = selectedGreeting ? selectedGreeting.text : getRandomGreeting(period, PREDEFINED_GREETINGS).text;
     }
 
-    const namePart = name ? `, <strong>${name}</strong>` : '';
-    $('#header-greeting').innerHTML = `${greetingText}${namePart}`;
+    const greetingEl = $('#header-greeting');
+    
+    // Verificación temprana para evitar saltos en el DOM
+    const targetHtml = name ? `${greetingText}<strong>, ${name}</strong>` : greetingText;
+    if (greetingEl.innerHTML === targetHtml) return;
+
+    greetingEl.textContent = greetingText;
+    if (name) {
+        const strong = document.createElement('strong');
+        strong.textContent = `, ${name}`;
+        greetingEl.appendChild(strong);
+    }
 }
 
+let clockTimer = null;
 export async function updateClock() {
   const now = new Date();
   // Obtenemos la configuración del reloj desde el storage.
@@ -153,6 +163,11 @@ export async function updateClock() {
   const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = new Intl.DateTimeFormat('es-ES', dateOptions).format(now);
   $('#date').textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+  
+  if (clockTimer) clearTimeout(clockTimer);
+  // Optimización de rendimiento: Si no se muestran segundos, el reloj solo "despierta" cada minuto.
+  const delay = showSeconds ? 1000 : (60000 - (now.getSeconds() * 1000 + now.getMilliseconds()));
+  clockTimer = setTimeout(updateClock, delay);
 }
 
 export function updateActiveThemeButton(theme) {
@@ -246,27 +261,44 @@ export function showFileError(message, isPermissionError = false) {
 
     if (saveStatus.timeout) clearTimeout(saveStatus.timeout);
 
-    let finalMessage = message;
+    saveStatus.textContent = '';
+    const msgSpan = document.createElement('span');
+    msgSpan.textContent = message;
+    saveStatus.appendChild(msgSpan);
+
     if (isPermissionError) {
-        finalMessage += ` <button id="reselectDirFromError" class="btn-link" style="text-decoration: underline; background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: inherit;">Re-seleccionar carpeta</button>`;
+        const reselectBtn = document.createElement('button');
+        reselectBtn.id = 'reselectDirFromError';
+        reselectBtn.className = 'btn-link';
+        reselectBtn.style.cssText = 'text-decoration: underline; background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: inherit; margin-left: 5px;';
+        reselectBtn.textContent = 'Re-seleccionar carpeta';
+        saveStatus.appendChild(reselectBtn);
     }
 
-    // Añadimos un ícono de cerrar para que el usuario pueda descartar el mensaje si lo desea.
-    // Esto es útil si el usuario no quiere re-seleccionar la carpeta en ese momento.
-    const closeIconHTML = `<img src="images/cerrar.svg" alt="Ícono de cerrar" style="width: 16px; height: 16px; cursor: pointer; vertical-align: middle; margin-left: 8px;" onclick="this.parentElement.style.opacity = '0'; setTimeout(() => this.parentElement.classList.remove('visible', 'error'), 300);">`;
+    const closeIcon = document.createElement('img');
+    closeIcon.src = 'images/cerrar.svg';
+    closeIcon.alt = 'Ícono de cerrar';
+    closeIcon.style.cssText = 'width: 16px; height: 16px; cursor: pointer; vertical-align: middle; margin-left: 8px;';
+    closeIcon.onclick = () => {
+        saveStatus.style.opacity = '0';
+        setTimeout(() => saveStatus.classList.remove('visible', 'error'), 300);
+    };
+    saveStatus.appendChild(closeIcon);
 
-    finalMessage += closeIconHTML;
-
-    saveStatus.innerHTML = finalMessage;
     saveStatus.classList.add('error');
     saveStatus.style.opacity = '1';
+    saveStatus.classList.add('visible');
 }
+
 export async function updateDataTabUI() {
     const { autoSync } = await storageGet(['autoSync']);
     const dirPathEl = $('#dirPath');
 
     if (dirPathEl) {
-        dirPathEl.innerHTML = `<span>Estado: <b>Sincronización Activa</b></span>`;
+        dirPathEl.textContent = 'Estado: ';
+        const b = document.createElement('b');
+        b.textContent = 'Sincronización Activa';
+        dirPathEl.appendChild(b);
     }
 
     const autoSyncToggle = $('#autoSyncToggle');

@@ -1,3 +1,5 @@
+import { GRADIENTS } from '../utils/gradients.js';
+
 /**
  * Fast Loader - Combines Background and Pre-loader logic.
  * Optimizes startup by doing a single storage fetch for all critical visual elements.
@@ -11,7 +13,7 @@
       'panelTextColor', 'panelTextSecondaryColor', 'accentColor',
       'activePremiumTheme', 'premiumThemeData',
       'doodle', 'bgData', 'bgUrl', 'gradient', 'bgDisplayMode',
-      'showSearch', 'showWeather', 'showDate'
+      'showSearch', 'showWeather', 'showDate', 'syncFirefoxTheme'
     ];
     
     const settings = await new Promise(resolve => chrome.storage.local.get(keys, resolve));
@@ -22,36 +24,8 @@
     const bodyStyle = document.body.style;
 
     // 1. APLICAR TEMA (Fondo y Paneles)
-    if (settings.activePremiumTheme && settings.premiumThemeData) {
-      const theme = settings.premiumThemeData;
-      bodyStyle.background = theme.background.gradient;
-      document.body.classList.add('theme-background');
-
-      const pt = theme.panel;
-      rootStyle.setProperty('--panel-bg', settings.panelBg || pt.bg);
-      rootStyle.setProperty('--panel-opacity', settings.panelOpacity ?? pt.opacity);
-      rootStyle.setProperty('--panel-blur', `${settings.panelBlur ?? pt.blur}px`);
-      rootStyle.setProperty('--panel-radius', `${settings.panelRadius ?? pt.radius}px`);
-      
-      const colors = theme.colors;
-      rootStyle.setProperty('--panel-text-color', settings.panelTextColor || colors.text);
-      rootStyle.setProperty('--panel-text-secondary-color', settings.panelTextSecondaryColor || colors.textSecondary);
-      rootStyle.setProperty('--accent-color', settings.accentColor || colors.accent);
-      rootStyle.setProperty('--greeting-color', settings.greetingColor || colors.greeting);
-      rootStyle.setProperty('--name-color', settings.nameColor || colors.name);
-      rootStyle.setProperty('--clock-color', settings.clockColor || colors.clock);
-      rootStyle.setProperty('--date-color', settings.dateColor || colors.date);
-    } else if (settings.gradient) {
-        // Fallback simple para degradados (se completará en settings.js)
-        bodyStyle.backgroundImage = settings.gradient;
-    } else if (settings.bgData || settings.bgUrl) {
-        bodyStyle.backgroundImage = `url('${settings.bgData || settings.bgUrl}')`;
-        bodyStyle.backgroundSize = 'cover';
-    }
-
-    if (settings.doodle && settings.doodle !== 'none') {
-        rootStyle.setProperty('background', 'transparent', 'important');
-        document.body.style.setProperty('background', 'transparent', 'important');
+    if (window.BackgroundManager) {
+        await window.BackgroundManager.apply(settings);
     }
 
     // 2. RENDERIZAR SALUDO, RELOJ Y FECHA
@@ -66,8 +40,15 @@
       else if (hour >= 12 && hour < 20) greetingText = 'Buenas tardes';
       else greetingText = 'Buenas noches';
       
-      const namePart = settings.userName ? `, <strong>${settings.userName}</strong>` : '';
-      greetingEl.innerHTML = `${greetingText}${namePart}`;
+      const targetHtml = settings.userName ? `${greetingText}<strong>, ${settings.userName}</strong>` : greetingText;
+      if (greetingEl.innerHTML !== targetHtml) {
+        greetingEl.textContent = greetingText;
+        if (settings.userName) {
+          const strong = document.createElement('strong');
+          strong.textContent = `, ${settings.userName}`;
+          greetingEl.appendChild(strong);
+        }
+      }
     }
 
     // Reloj

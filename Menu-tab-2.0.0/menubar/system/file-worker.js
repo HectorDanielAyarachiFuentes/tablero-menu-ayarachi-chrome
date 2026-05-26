@@ -42,7 +42,8 @@ async function loadDataFromFile(handle) {
         return data;
     } catch (err) {
         if (err.name === 'NotFoundError') {
-            console.log('El archivo de datos no existe aún en el directorio seleccionado (worker).');
+            // Silently ignore if file doesn't exist yet
+
         } else {
             console.error('Error al cargar datos desde el archivo (worker):', err);
         }

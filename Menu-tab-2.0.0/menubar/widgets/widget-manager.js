@@ -2,7 +2,7 @@
  * Sistema de Widgets - Manager Principal
  * Gestiona la carga y visualización de la barra lateral de widgets
  */
-import { $ } from '../core/utils.js';
+import { $, setHTML, setSVG } from '../core/utils.js';
 import { PomodoroWidget } from './pomodoro.js';
 import { TodoWidget } from './todo.js';
 import { CalendarWidget } from './calendar.js';
@@ -44,12 +44,12 @@ class WidgetsManager {
     createSidebar() {
         this.sidebar = document.createElement('aside');
         this.sidebar.className = 'widgets-sidebar';
-        this.sidebar.innerHTML = `
+        setHTML(this.sidebar, `
             <div class="widgets-header">
                 <h2>Widgets</h2>
             </div>
             <div id="widgets-container"></div>
-        `;
+        `);
         document.body.appendChild(this.sidebar);
     }
 
@@ -57,14 +57,14 @@ class WidgetsManager {
         this.toggleBtn = document.createElement('div');
         this.toggleBtn.id = 'widgets-toggle-btn';
         this.toggleBtn.title = "Abrir Widgets";
-        this.toggleBtn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
+        setSVG(this.toggleBtn, `
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="2"></rect>
             </svg>
-        `;
+        `);
         document.body.appendChild(this.toggleBtn);
     }
 
