@@ -269,6 +269,8 @@
 .weather-widget-fixed.open .weather-wind {
   width: auto !important;
   justify-content: flex-start !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 /* Hilos de prefijo H: y V: en lugar de los emojis */
