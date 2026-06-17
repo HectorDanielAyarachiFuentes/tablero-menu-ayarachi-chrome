@@ -12,6 +12,7 @@ export function initEditor() {
     editor.addEventListener('click', handleEditorClick);
     editor.addEventListener('dragstart', handleEditorDragStart);
     editor.addEventListener('dragover', handleEditorDragOver);
+    editor.addEventListener('dragenter', (e) => e.preventDefault());
     editor.addEventListener('drop', handleEditorDrop);
     editor.addEventListener('dragend', handleEditorDragEnd);
 
@@ -257,7 +258,9 @@ function handleEditorDragStart(e) {
     if (e.target.classList.contains('row')) {
         dragEditorRowSrcEl = e.target;
         e.dataTransfer.effectAllowed = 'move';
-        e.target.classList.add('dragging');
+        setTimeout(() => {
+            e.target.classList.add('dragging');
+        }, 0);
     }
 }
 

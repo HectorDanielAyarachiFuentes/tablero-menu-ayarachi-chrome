@@ -39,6 +39,7 @@ export function initTiles() {
     tilesEl.addEventListener('click', handleTileClick);
     tilesEl.addEventListener('dragstart', handleTileDragStart);
     tilesEl.addEventListener('dragover', handleTileDragOver);
+    tilesEl.addEventListener('dragenter', (e) => e.preventDefault());
     tilesEl.addEventListener('dragleave', handleTileDragLeave);
     tilesEl.addEventListener('drop', handleTileDrop);
     tilesEl.addEventListener('dragend', handleTileDragEnd);
@@ -377,14 +378,16 @@ function handleTileDragStart(e) {
     // Crear el placeholder del mismo tamaño
     createPlaceholder(tile);
 
-    // Marcar el tile como arrastrado
-    tile.classList.add('dragging');
-    cachedTilesContainer.classList.add('dragging-active');
+    // Marcar el tile como arrastrado (diferido para Chrome)
+    setTimeout(() => {
+        tile.classList.add('dragging');
+        cachedTilesContainer.classList.add('dragging-active');
 
-    // Cachear posiciones de tiles DESPUÉS de que el dragging tile se oculte
-    requestAnimationFrame(() => {
-        cacheTilePositions();
-    });
+        // Cachear posiciones de tiles DESPUÉS de que el dragging tile se oculte
+        requestAnimationFrame(() => {
+            cacheTilePositions();
+        });
+    }, 0);
 }
 
 function createDragGhost(tile, x, y) {
