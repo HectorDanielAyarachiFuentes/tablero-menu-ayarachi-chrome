@@ -1,0 +1,183 @@
+/* ============================================
+   DRAG & DROP ESTILO OPERA - ESTILOS
+   Placeholder gap + animaciones suaves
+   ============================================ */
+
+/* ---- Estado del tile siendo arrastrado ---- */
+.tile.dragging {
+    /* Sacar del flow del grid para que no ocupe espacio */
+    position: absolute !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+/* ---- Placeholder (espacio vacío donde se va a soltar) ---- */
+.drag-placeholder {
+    border: 2px dashed rgba(var(--accent-color-rgb, 138, 43, 226), 0.4);
+    border-radius: var(--panel-radius, 12px);
+    background: rgba(var(--accent-color-rgb, 138, 43, 226), 0.06);
+    min-height: 68px;
+    pointer-events: none;
+    /* Animación ligera: solo opacity (compositor-only) */
+    animation: placeholder-pulse 1.5s ease-in-out infinite;
+    will-change: opacity;
+}
+
+@keyframes placeholder-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ---- Imagen fantasma flotante ---- */
+.drag-ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.85;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45),
+                0 0 0 1px rgba(var(--accent-color-rgb, 138, 43, 226), 0.3);
+    border-radius: var(--panel-radius, 12px);
+    /* SIN transition en transform - movimiento instantáneo sin lag */
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+.drag-ghost.dropping {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* ---- Transiciones suaves para tiles que se reorganizan ---- */
+.tiles.dragging-active .tile:not(.dragging) {
+    transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1),
+                opacity 0.2s ease;
+}
+
+/* ---- Zona de drop activa - Carpeta ---- */
+.tile.drag-over-folder {
+    background: rgba(var(--accent-color-rgb, 138, 43, 226), 0.15) !important;
+    box-shadow: 0 0 0 3px var(--accent-color, #8a2be2),
+                0 0 20px rgba(var(--accent-color-rgb, 138, 43, 226), 0.4) !important;
+    transform: scale(1.05);
+    animation: folder-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes folder-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 3px var(--accent-color, #8a2be2),
+                    0 0 20px rgba(var(--accent-color-rgb, 138, 43, 226), 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 3px var(--accent-color, #8a2be2),
+                    0 0 30px rgba(var(--accent-color-rgb, 138, 43, 226), 0.6);
+    }
+}
+
+/* ---- Cursor personalizado durante drag ---- */
+.tiles.dragging-active {
+    cursor: grabbing !important;
+}
+
+.tiles.dragging-active .tile:not(.dragging) {
+    cursor: default;
+}
+
+.tiles.dragging-active .tile.drag-over-folder {
+    cursor: alias;
+}
+
+/* ---- Animación de aterrizaje al soltar ---- */
+@keyframes drop-land {
+    0% {
+        transform: scale(1.05) translateY(-4px);
+        opacity: 0.6;
+    }
+    60% {
+        transform: scale(0.97) translateY(2px);
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.tile.drop-landing {
+    animation: drop-land 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---- Animación de entrada a carpeta ---- */
+@keyframes enter-folder {
+    0% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(0.8) translateY(-20px);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(0) translateY(-40px);
+        opacity: 0;
+    }
+}
+
+.tile.entering-folder {
+    animation: enter-folder 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ---- Prevenir selección de texto durante drag ---- */
+.tiles.dragging-active * {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* ---- Indicador visual de "no se puede soltar aquí" ---- */
+.tile.drag-invalid {
+    background: rgba(255, 0, 0, 0.1);
+    border: 2px dashed #ff4444;
+    cursor: not-allowed;
+}
+
+/* ---- Efecto de partículas al soltar en carpeta ---- */
+@keyframes particle-burst {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+    }
+}
+
+.folder-particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particle-burst 0.6s ease-out forwards;
+}
+
+/* ---- Mejoras para touch devices ---- */
+@media (hover: none) and (pointer: coarse) {
+    .tile.drag-over-folder {
+        transform: scale(1.05);
+    }
+
+    .drag-ghost {
+        transform: scale(1.08) rotate(3deg);
+        opacity: 0.7;
+    }
+}

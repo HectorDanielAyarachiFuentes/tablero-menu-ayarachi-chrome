@@ -1,0 +1,510 @@
+/**
+ * Gestiona toda la lógica del panel de configuración.
+ * Incluye la inicialización de los listeners para las diferentes pestañas (General, Fondo, Datos, etc.),
+ * y maneja la lógica para cambiar temas, fondos, importar/exportar datos y más.
+ */
+import { $, $$, storageGet, storageSet } from '../core/utils.js';
+import { saveAndSyncSetting } from '../core/utils.js';
+import { updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateBgModeUI } from '../components/ui.js';
+import { updateSliderValueSpans, updatePanelRgb } from './settings-panels.js';
+// BackgroundManager ahora es global
+import { tiles, trash, setTiles, setTrash, saveAndRender, renderTiles } from '../core/tiles.js';
+import { renderNotes } from '../../notas/notas.js';
+import { renderTrash } from '../components/trash.js';
+import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../../utils/gradients.js';
+import { FileSystem } from '../system/file-system.js';
+import { PREDEFINED_GREETINGS } from '../../utils/greetings-list.js';
+import { STORAGE_KEYS } from '../core/config.js';
+
+let appState = {};
+let importInput;
+
+const DEFAULT_PANEL_SETTINGS = {
+    panelBg: 'rgba(0, 0, 0, 0.2)',
+    panelOpacity: 0.1,
+    panelBlur: 10,
+    panelRadius: 12
+};
+
+export function initSettings(initialState) {
+    appState = initialState;
+
+    $('#bgFile').addEventListener('change', handleBgFileChange);
+    $('#bgUrl').addEventListener('input', (e) => {
+        if (e.target.value.trim()) document.documentElement.style.setProperty('background', `url('${e.target.value.trim()}')`, 'important');
+    });
+    $('#bgUrl').addEventListener('change', async (e) => {
+        const url = e.target.value.trim();
+        if (!url) return;
+        const { bgDisplayMode: currentMode } = await storageGet(['bgDisplayMode']);
+        const mode = currentMode || 'cover';
+        saveAndSyncSetting({ bgUrl: url, bgData: null, gradient: null, doodle: 'none', bgDisplayMode: mode, activePremiumTheme: null, syncFirefoxTheme: false }, () => {
+            window.dispatchEvent(new CustomEvent('background-changed'));
+            const syncToggle = $('#syncFirefoxThemeToggle');
+            if (syncToggle) syncToggle.checked = false;
+        });
+    });
+
+    $$('#bgModeSelector button').forEach(btn => {
+        btn.addEventListener('click', handleBgModeChange);
+    });
+    updateBgModeUI(initialState.isCustomBg, initialState.bgDisplayMode);
+    $('#randomBgToggle').checked = initialState.randomBg || false;
+    $('#randomBgToggle').addEventListener('change', (e) => { // CAMBIO: El texto de la etiqueta se cambió en el HTML
+        storageSet({ randomBg: e.target.checked }).then(showSaveStatus);
+    });
+
+    if ($('#syncFirefoxThemeToggle')) {
+        $('#syncFirefoxThemeToggle').checked = initialState.syncFirefoxTheme || false;
+        $('#syncFirefoxThemeToggle').addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            const updateObj = { syncFirefoxTheme: isChecked };
+            if (isChecked) {
+                // Desactivar otros fondos para que el tema de Firefox tome control exclusivo
+                updateObj.doodle = 'none';
+                updateObj.gradient = null;
+                updateObj.bgUrl = null;
+                updateObj.bgData = null;
+                updateObj.activePremiumTheme = null;
+            }
+            saveAndSyncSetting(updateObj, () => {
+                window.dispatchEvent(new CustomEvent('background-changed'));
+                if (isChecked) {
+                    // Desmarcar visualmente gradientes y doodles activos en la interfaz
+                    $$('.gradient-btn.active').forEach(el => el.classList.remove('active'));
+                    $$('.doodle-item.active').forEach(el => el.classList.remove('active'));
+                    
+                    // Mostrar placeholder en vista previa del doodle
+                    const preview = $('#doodle-preview');
+                    if (preview) {
+                        preview.textContent = '';
+                        const span = document.createElement('span');
+                        span.className = 'placeholder-text';
+                        span.textContent = 'Selecciona un doodle para verlo aquí';
+                        preview.appendChild(span);
+                    }
+                }
+            });
+        });
+    }
+
+    $$('#tab-fondo .sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchToBackgroundSubTab(btn.dataset.subtab));
+    });
+
+    $$('#tab-general .sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchToGeneralSubTab(btn.dataset.subtab));
+    });
+
+    $$('#tab-paneles .sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchToPanelSubTab(btn.dataset.subtab));
+    });
+
+    // --- Lógica para la pestaña General (nuevas opciones de reloj y saludos) ---
+    populateGreetingSelect();
+    storageGet(['use12HourFormat', 'showSeconds', 'greetingPreference', 'customGreetings', 'userName', 'weatherCity']).then(settings => {
+        $('#clockFormatToggle').checked = settings.use12HourFormat ?? false;
+        $('#showSecondsToggle').checked = settings.showSeconds ?? false;
+        $('#greetingSelect').value = settings.greetingPreference || 'random';
+        $('#customGreetingsInput').value = settings.customGreetings || '';
+        $('#customGreetingsContainer').hidden = $('#greetingSelect').value !== 'custom';
+        
+        // Inicializar nombre y ciudad
+        if ($('#userName')) $('#userName').value = settings.userName || '';
+        if ($('#weatherCity')) $('#weatherCity').value = settings.weatherCity || '';
+    });
+
+    $('#clockFormatToggle').addEventListener('change', e => {
+        saveAndSyncSetting({ use12HourFormat: e.target.checked });
+    });
+
+    $('#showSecondsToggle').addEventListener('change', e => {
+        saveAndSyncSetting({ showSeconds: e.target.checked });
+    });
+
+    $('#greetingSelect').addEventListener('change', e => {
+        const preference = e.target.value;
+        $('#customGreetingsContainer').hidden = (preference !== 'custom');
+        saveAndSyncSetting({ greetingPreference: preference }, () => {
+            renderGreeting($('#userName').value);
+        });
+    });
+
+    $('#customGreetingsInput').addEventListener('input', e => {
+        // Usamos un debounce implícito al guardar solo al final de la escritura
+        saveAndSyncSetting({ customGreetings: e.target.value }, () => {
+            // Si el modo "custom" está activo, actualiza el saludo en tiempo real
+            if ($('#greetingSelect').value === 'custom') renderGreeting($('#userName').value);
+        });
+    });
+
+    // --- Lógica para la pestaña General (nuevas opciones) ---
+    const uiToggles = {
+        showSearchToggle: { selector: '.search-section', key: 'showSearch' },
+        showWeatherToggle: { selector: '#weather', key: 'showWeather' },
+        showDateToggle: { selector: '#date', key: 'showDate' }
+    };
+
+    Object.entries(uiToggles).forEach(([toggleId, { selector, key }]) => {
+        const toggle = $(`#${toggleId}`);
+        const element = $(selector);
+        // Establecer estado inicial del interruptor
+        storageGet([key]).then(settings => toggle.checked = settings[key] ?? true);
+        // Añadir listener
+        toggle.addEventListener('change', (e) => {
+            saveAndSyncSetting({ [key]: e.target.checked }, () => element.hidden = !e.target.checked);
+        });
+    });
+
+    // --- Lógica para controlar animaciones de carga ---
+    const loadAnimToggle = $('#enableLoadAnimationsToggle');
+    storageGet(['enableLoadAnimations']).then(settings => {
+        const enableLoadAnimations = settings.enableLoadAnimations ?? false; // Por defecto desactivado (carga rápida)
+        loadAnimToggle.checked = enableLoadAnimations;
+        // Aplicar clase al body
+        if (enableLoadAnimations) {
+            document.body.classList.add('with-load-animations');
+        }
+    });
+
+    loadAnimToggle.addEventListener('change', (e) => {
+        const enableLoadAnimations = e.target.checked;
+        saveAndSyncSetting({ enableLoadAnimations }, () => {
+            if (enableLoadAnimations) {
+                document.body.classList.add('with-load-animations');
+            } else {
+                document.body.classList.remove('with-load-animations');
+            }
+        });
+    });
+
+    // --- Nueva lógica para la pestaña de Datos ---
+    // El sistema de archivos ahora es interno y automático (OPFS)
+    updateDataTabUI();
+
+    $('#autoSyncToggle').checked = initialState.autoSync || false;
+    $('#autoSyncToggle').addEventListener('change', (e) => {
+        storageSet({ autoSync: e.target.checked }).then(() => {
+            showSaveStatus();
+            updateDataTabUI();
+        });
+    });
+
+    updateDataTabUI();
+
+    // Listeners para los botones de Importar/Exportar
+    $('#importJsonBtn').addEventListener('click', () => importInput.click());
+    $('#exportJsonBtn').addEventListener('click', exportData);
+
+    // Add hidden input for import if not already added
+    if (!importInput) {
+        importInput = document.createElement('input');
+        importInput.type = 'file';
+        importInput.accept = '.json, .html';
+        importInput.style.display = 'none';
+        importInput.addEventListener('change', handleImport);
+        document.body.appendChild(importInput);
+    }
+
+    // --- Lógica para la pestaña General (Colores de Texto) ---
+    const textColors = {
+        greetingColor: { selector: '#header-greeting', cssVar: '--greeting-color' },
+        nameColor: { selector: '#header-greeting strong', cssVar: '--name-color' },
+        clockColor: { selector: '#header-clock', cssVar: '--clock-color' },
+        dateColor: { selector: '#date', cssVar: '--date-color' }
+    };
+
+    // Cargar colores iniciales
+    storageGet(Object.keys(textColors)).then(settings => {
+        Object.entries(textColors).forEach(([key, { cssVar }]) => {
+            const color = settings[key] || '#FFFFFF';
+            $(`#${key}`).value = color;
+            document.documentElement.style.setProperty(cssVar, color);
+        });
+    });
+
+    // Listeners para los selectores de color individuales
+    Object.entries(textColors).forEach(([key, { cssVar }]) => {
+        $(`#${key}`).addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.documentElement.style.setProperty(cssVar, color);
+            saveAndSyncSetting({ [key]: color });
+        });
+    });
+
+    // Listener para el botón "Aplicar a todos"
+    $('#applyMasterTextColor').addEventListener('click', () => {
+        const masterColor = $('#masterTextColor').value;
+        const settingsToSave = {};
+        Object.entries(textColors).forEach(([key, { cssVar }]) => {
+            $(`#${key}`).value = masterColor;
+            document.documentElement.style.setProperty(cssVar, masterColor);
+            settingsToSave[key] = masterColor;
+        });
+        saveAndSyncSetting(settingsToSave);
+    });
+
+    // --- Lógica para la pestaña General (Tipografía) ---
+    const textFonts = {
+        greetingFont: { cssVar: '--greeting-font' },
+        dateFont: { cssVar: '--date-font' }
+    };
+
+    // Cargar fuentes iniciales
+    storageGet(Object.keys(textFonts)).then(settings => {
+        Object.entries(textFonts).forEach(([key, { cssVar }]) => {
+            const font = settings[key] || '\'Poppins\', sans-serif';
+            $(`#${key}`).value = font;
+            document.documentElement.style.setProperty(cssVar, font);
+        });
+    });
+
+    // Listeners para los selectores de fuente
+    Object.entries(textFonts).forEach(([key, { cssVar }]) => {
+        $(`#${key}`).addEventListener('change', (e) => {
+            const font = e.target.value;
+            document.documentElement.style.setProperty(cssVar, font);
+            saveAndSyncSetting({ [key]: font });
+        });
+    });
+}
+
+/**
+ * Cambia entre las sub-pestañas de la sección "Fondo".
+ * @param {string} subTabId - El ID de la sub-pestaña a activar (ej. 'degradados', 'imagen').
+ */
+function switchToBackgroundSubTab(subTabId) {
+    // Ocultar todos los paneles y desactivar todos los botones de la pestaña Fondo
+    $$('#tab-fondo .sub-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    $$('#tab-fondo .sub-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Activar el panel y el botón correctos
+    $(`#subtab-${subTabId}`).classList.add('active');
+    $(`.sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
+}
+
+/**
+ * Cambia entre las sub-pestañas de la sección "General".
+ * @param {string} subTabId - El ID de la sub-pestaña a activar (ej. 'contenido', 'apariencia').
+ */
+function switchToGeneralSubTab(subTabId) {
+    // Ocultar todos los paneles y desactivar todos los botones de la pestaña General.
+    $$('#tab-general .sub-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    $$('#tab-general .sub-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Activar el panel y el botón correctos
+    $(`#subtab-${subTabId}`).classList.add('active');
+    $(`#tab-general .sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
+}
+
+/**
+ * Cambia entre las sub-pestañas de la sección "Paneles".
+ * @param {string} subTabId - El ID de la sub-pestaña a activar (ej. 'temas', 'apariencia').
+ */
+function switchToPanelSubTab(subTabId) {
+    $$('#tab-paneles .sub-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    $$('#tab-paneles .sub-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    $(`#tab-paneles #subtab-${subTabId}`).classList.add('active');
+    $(`#tab-paneles .sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
+}
+
+/**
+ * Rellena el <select> de saludos con las opciones predefinidas.
+ */
+function populateGreetingSelect() {
+    const select = $('#greetingSelect');
+    const optgroupMorning = document.createElement('optgroup');
+    optgroupMorning.label = 'Mañana';
+    const optgroupAfternoon = document.createElement('optgroup');
+    optgroupAfternoon.label = 'Tarde';
+    const optgroupNight = document.createElement('optgroup');
+    optgroupNight.label = 'Noche';
+
+    PREDEFINED_GREETINGS.forEach(g => {
+        const option = new Option(g.text, g.id);
+        if (g.period === 'morning') optgroupMorning.appendChild(option);
+        else if (g.period === 'afternoon') optgroupAfternoon.appendChild(option);
+        else optgroupNight.appendChild(option);
+    });
+    select.append(optgroupMorning, optgroupAfternoon, optgroupNight);
+}
+
+export async function loadGradients(activeGradient) {
+    const gradientListEl = $('#gradient-list');
+
+    gradientListEl.textContent = '';
+    GRADIENTS.forEach(g => {
+        const btn = document.createElement('button');
+        btn.className = 'gradient-btn';
+        btn.style.setProperty('--gradient-bg-preview', g.gradient);
+        btn.title = g.name.trim(); // Show name on hover
+        btn.dataset.gradientId = g.id;
+        btn.dataset.type = 'gradient';
+        if (g.id === activeGradient) btn.classList.add('active');
+        btn.addEventListener('click', handleBackgroundChange);
+        gradientListEl.appendChild(btn);
+    });
+}
+
+
+
+function handleBgFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Liberar memoria del Object URL anterior si existe
+    if (appState.currentBackgroundValue && appState.currentBackgroundValue.startsWith('blob:')) {
+        URL.revokeObjectURL(appState.currentBackgroundValue);
+    }
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const { bgDisplayMode } = await storageGet(['bgDisplayMode']);
+        const mode = bgDisplayMode || 'cover';
+        // Guardamos y sincronizamos, asegurándonos de desactivar el doodle y el tema premium
+        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, doodle: 'none', bgDisplayMode: mode, activePremiumTheme: null, syncFirefoxTheme: false }, () => {
+            window.dispatchEvent(new CustomEvent('background-changed'));
+            $('#bgUrl').value = '';
+            const syncToggle = $('#syncFirefoxThemeToggle');
+            if (syncToggle) syncToggle.checked = false;
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleBgModeChange(e) {
+    const mode = e.currentTarget.dataset.mode;
+    saveAndSyncSetting({ bgDisplayMode: mode }, () => {
+        window.dispatchEvent(new CustomEvent('background-changed'));
+        updateBgModeUI(true, mode);
+    });
+}
+
+function handleBackgroundChange(e) {
+    const gradientId = e.target.dataset.gradientId;
+    saveAndSyncSetting({ gradient: gradientId, bgUrl: null, bgData: null, doodle: 'none', activePremiumTheme: null, syncFirefoxTheme: false }, () => {
+        window.dispatchEvent(new CustomEvent('background-changed'));
+        const syncToggle = $('#syncFirefoxThemeToggle');
+        if (syncToggle) syncToggle.checked = false;
+    });
+    // Actualizamos el estado de la aplicación para que el hover no lo revierta al anterior.
+    appState.currentGradient = gradientId;
+    appState.currentBackgroundValue = null;
+}
+
+function handleBackgroundHover(e) {
+    const target = e.target;
+}
+
+/**
+ * Importa los marcadores del navegador y los añade al tablero.
+ */
+async function importBrowserBookmarks() {
+    if (!confirm('Esto añadirá todos tus marcadores al inicio de la lista de accesos. ¿Quieres continuar?')) {
+        return;
+    }
+    const { getBookmarks } = await import('../app.js');
+    const bookmarks = await getBookmarks();
+    if (bookmarks.length > 0) {
+        setTiles([...bookmarks, ...tiles]);
+        saveAndRender();
+        alert(`${bookmarks.length} marcadores han sido importados y añadidos a tu tablero.`);
+    } else {
+        alert('No se encontraron marcadores para importar.');
+    }
+}
+
+async function exportData() {
+    const allData = await storageGet(STORAGE_KEYS);
+    const json = JSON.stringify(allData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tablero-data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+async function handleImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const content = e.target.result;
+            let data;
+            
+            // Detectar si es un archivo HTML (marcadores exportados)
+            if (file.name.endsWith('.html') || file.type === 'text/html') {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const links = doc.querySelectorAll('a');
+                data = [];
+                links.forEach(link => {
+                    const url = link.getAttribute('href');
+                    if (url && !url.startsWith('javascript:')) {
+                        data.push({
+                            type: 'enlace',
+                            name: link.textContent.trim() || url,
+                            url: url,
+                            icon: link.getAttribute('icon') || ''
+                        });
+                    }
+                });
+            } else {
+                data = JSON.parse(content);
+            }
+            
+            // Si los datos son un array, asumimos que es una lista de marcadores/tiles
+            if (Array.isArray(data)) {
+                setTiles([...data, ...tiles]);
+                saveAndRender();
+                alert(`${data.length} marcadores han sido importados y añadidos a tu tablero.`);
+                return;
+            }
+
+            await storageSet(data);
+            if (data.tiles) setTiles(data.tiles);
+            if (data.trash) setTrash(data.trash);
+            renderTiles();
+            renderTrash();
+            renderNotes();
+            // Update settings
+            if (data.userName !== undefined) {
+                $('#userName').value = data.userName;
+                renderGreeting(data.userName);
+            }
+            if (data.panelOpacity) {
+                $('#panelOpacity').value = data.panelOpacity;
+                document.documentElement.style.setProperty('--panel-opacity', data.panelOpacity);
+                updateSliderValueSpans();
+            }
+            if (data.panelBlur) {
+                $('#panelBlur').value = data.panelBlur;
+                document.documentElement.style.setProperty('--panel-blur', `${data.panelBlur}px`);
+                updateSliderValueSpans();
+            }
+            showSaveStatus();
+            alert('Datos importados correctamente.');
+        } catch (err) {
+            alert('Error al importar el archivo JSON: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
+}
+
+

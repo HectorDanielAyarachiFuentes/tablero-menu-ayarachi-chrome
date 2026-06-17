@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "Tablero",
+  "version": "3.0.6",
+  "description": "Un tablero personalizable para tu página de nueva pestaña con gestión de notas.",
+  
+  "icons": {
+    "16": "icons/icon.svg",
+    "32": "icons/icon.svg",
+    "48": "icons/icon.svg",
+    "64": "icons/icon.svg",
+    "128": "icons/icon.svg"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tablero-hector@ayarachi.com",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+
+  "background": {
+    "service_worker": "menubar/background.js"
+  },
+
+  "permissions": [
+    "storage",
+    "geolocation",
+    "bookmarks",
+    "unlimitedStorage"
+  ],
+
+  "host_permissions": [
+    "https://api.open-meteo.com/*",
+    "https://geocoding-api.open-meteo.com/*"
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://* https://www.google.com https://google.com https://t3.gstatic.com blob: moz-extension:;"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["menubar/system/file-worker.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

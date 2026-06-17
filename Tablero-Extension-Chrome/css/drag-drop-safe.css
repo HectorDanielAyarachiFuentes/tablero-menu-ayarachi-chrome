@@ -1,0 +1,24 @@
+/* ============================================
+   DRAG & DROP - ESTILOS BASE COMPLEMENTARIOS
+   Mejora las clases existentes sin conflictos
+   ============================================ */
+
+/* Cursor base para tiles */
+.tile {
+    cursor: grab;
+}
+
+.tile:active:not(.tile-add) {
+    cursor: grabbing;
+}
+
+/* Transición suave por defecto para todos los tiles */
+.tile:not(.dragging) {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+/* Hover sutil (desactivado durante drag) */
+.tile:hover:not(.dragging):not(.drag-over-folder) {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
